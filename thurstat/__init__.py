@@ -37,7 +37,7 @@ from types import SimpleNamespace
 from typing import Callable, Dict, List, Optional, Type, Union
 from typing_extensions import Literal, Self
 
-pfunc = SimpleNamespace(PDF="pdf", PMF="pmf", CDF="cdf", PPF="ppf")
+pfunc = SimpleNamespace(PDF="pdf", PMF="pmf", CDF="cdf", SF="sf", PPF="ppf", ISF="ISF")
 NumericFunction = Callable[[float], float]
 ProbabilityFunction = Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"]
 
