@@ -8,11 +8,16 @@ import scipy.stats
 from scipy.optimize import brentq, minimize_scalar
 
 __all__ = [
+    # global
     "pfunc",
     "update_config",
+    # base classes
     "DiscreteDistribution", "ContinuousDistribution",
+    # instantiable equivalents of the base classes
     "CustomDiscreteDistribution", "CustomContinuousDistribution",
+    # predefined discrete distributions
     "UniformDiscreteDistribution",
+    # predefined continuous distributions
     "UniformContinuousDistribution",
 ]
 
