@@ -55,8 +55,10 @@ def update_config(**kwargs):
         config["global_seed"] = np.random.RandomState(np.random.MT19937(np.random.SeedSequence(kwargs["global_seed"])))
 
 class ParameterValidationError(Exception):
+    """Raised when an invalid set of parameters are used to instantiate a Distribution."""
     
     def __init__(self, given: List[str], options: Optional[List[List[str]]]=None):
+        """Create the error with the given parameters and optional parameters."""
         message = f"Failed to validate parameters. Given: {given}."
         if options is not None:
             message += f" Options: {options}."
@@ -70,7 +72,7 @@ class Distribution(abc.ABC):
         given = list(parameters.keys())
         self._dist = self.interpret_parameterization(parameters)
         if len(parameters) > 0:
-            raise ParameterValidationError(given)
+            raise ParameterValidationError(given, self.options)
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
