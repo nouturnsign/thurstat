@@ -1,33 +1,3 @@
-# Base distribution classes: 
-# Distribution
-# DiscreteDistribution
-# ContinuousDistribution
-
-# Distribution
-#
-# implements methods:
-# interpret_parameterization
-# generate_random_values
-# evaluate
-# expected_value
-# moment
-# probability_between
-# apply_transform
-# display
-#
-# implements class methods:
-# from_pfunc
-
-# DiscreteDistribution
-#
-# implements methods:
-# probability_at
-
-# Future goals:
-# basic arithmetic operations on distributions and equality
-# classes Event, ProbabilityOf (callable object P)
-
-# assuming Python version >= 3.7
 import abc
 import matplotlib.pyplot as plt
 import numpy as np
@@ -49,6 +19,7 @@ config = {
 }
 
 def update_config(**kwargs):
+    """Update the global config."""
     
     config.update(kwargs)
     if "global_seed" in kwargs:
@@ -65,10 +36,12 @@ class ParameterValidationError(Exception):
         super().__init__(message)
 
 class Distribution(abc.ABC):
+    """The base class for a distribution. Do not instantiate this class."""
     
     options: Optional[List[List[str]]]
     
     def __init__(self, **parameters: float) -> None:
+        """Create a distribution object given the parameters as named keyword arguments."""
         given = list(parameters.keys())
         self._dist = self.interpret_parameterization(parameters)
         if len(parameters) > 0:
@@ -82,6 +55,7 @@ class Distribution(abc.ABC):
         pass
     
     def generate_random_values(self, n: int) -> np.ndarray:
+        """Generate n random values."""
         if config["local_seed"] is not None:
             seed = config["local_seed"]
         else:
@@ -89,12 +63,41 @@ class Distribution(abc.ABC):
         return self._dist.rvs(n, random_state=seed)
     
     def evaluate(self, pfunc: ProbabilityFunction, at: float) -> float:
+        """
+        Evaluate a probability function at some value.
+        
+        Parameters
+        ----------
+        pfunc: ProbabilityFunction
+            One of the supported probability function abbreviations. See `thurstat.pfunc`.
+        at: float
+            The value to evaluate at.
+            
+        Returns
+        -------
+        float
+            pfunc(at)
+        """
         return getattr(self._dist, pfunc)(at)
     
-    def expected_value(self, func: NumericFunction) -> float:
+    def expected_value(self, func: Optional[NumericFunction]=None) -> float:
+        """
+        Get the expected value of a function on the distribution.
+        
+        Parameters
+        ----------
+        func: Optional[NumericFunction], default=None
+            A function that accepts a numeric input and returns a numeric output.
+        
+        Returns
+        -------
+        float
+            E[func(X)]
+        """
         return self._dist.expect(func)
     
     def moment(self, n: int) -> float:
+        """Return the nth moment."""
         return self._dist.moment(n)
     
     @abc.abstractmethod
@@ -106,7 +109,7 @@ class Distribution(abc.ABC):
         pass
     
     @abc.abstractmethod
-    def apply_transform(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> Union["CustomDiscreteDistribution", "CustomContinuousDistribution"]:
+    def apply_function(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> Union["CustomDiscreteDistribution", "CustomContinuousDistribution"]:
         pass
     
     @abc.abstractmethod
@@ -119,6 +122,7 @@ class Distribution(abc.ABC):
         pass
     
 class CustomDistribution(Distribution):
+    """The base class for custom distributions, defined by a scipy rv. Do not instantiate this class."""
     
     options = None
     
@@ -130,17 +134,21 @@ class CustomDistribution(Distribution):
         pass
     
 class DiscreteDistribution(Distribution):
+    """The base class for discrete distributions. Do not instantiate this class."""
     
     def probability_between(self, a: float, b: float) -> float:
+        """Calculate the probability P(a <= X <= b), including both a and b."""
         return self.evaluate("cdf", b) - self.evaluate("cdf", a - 1)
     
     def probability_at(self, a: float) -> float:
+        """Calculate the probability P(X == a)."""
         return self.evaluate("pmf", a)
     
-    def apply_transform(self, func: NumericFunction) -> "CustomDiscreteDistribution":
+    def apply_function(self, func: NumericFunction) -> "CustomDiscreteDistribution":
+        """Apply a function to the distribution to create a new distribution."""
         a, b = self._dist.support()
         x = np.arange(a, b + 1)
-        y = self.evaluate("pmf", x) # see display
+        y = self.evaluate("pmf", x)
         
         x_transform = func(x)
         pmf = {}
@@ -153,6 +161,24 @@ class DiscreteDistribution(Distribution):
         return self.from_pfunc("pmf", np.vectorize(lambda a: pmf.get(a, 0)), a, b)
     
     def display(self, pfunc: ProbabilityFunction, add: bool=False, color: Optional[str]=None, **kwargs) -> None:
+        """
+        Display a probability function.
+        
+        Parameters
+        ----------
+        pfunc: ProbabilityFunction
+            One of the supported probability function abbreviations. See `thurstat.pfunc`.
+        add: bool, default=False
+            Whether or not to start or add to an existing plot. `plt.show()` must be called later.
+        color: Optional[str], default=None
+            What color to use. Defaults to matplotlib's default blue color.
+        **kwargs
+            Additional keyword arguments to pass to `plt.stem`.
+            
+        Returns
+        -------
+        None
+        """
         a, b = self._dist.support()
         x = np.arange(a, b + 1)
         y = self.evaluate(pfunc, x)
@@ -166,24 +192,64 @@ class DiscreteDistribution(Distribution):
     
     @classmethod    
     def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Union[int, float], b: Union[int, float]) -> "CustomDiscreteDistribution":
+        """
+        Create a distribution from a probability function.
+        
+        Parameters
+        ----------
+        pfunc: ProbabilityFunction
+            One of the supported probability function abbreviations. See `thurstat.pfunc`.
+        func: NumericFunction
+            The function itself.
+        a, b: Union[int, float]
+            The support of the distribution.
+            
+        Returns
+        -------
+        CustomDiscreteDistribution
+            The new distribution.
+        """
         class NewScipyDiscreteDistribution(scipy.stats.rv_discrete): pass
         setattr(NewScipyDiscreteDistribution, "_" + pfunc, staticmethod(func))
         return CustomDiscreteDistribution(NewScipyDiscreteDistribution(a=a, b=b))
     
 class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
+    """A custom discrete distribution."""
     
     def __init__(self, dist: scipy.stats.rv_discrete) -> None:
+        """Create a `CustomDiscreteDistribution` object given a `scipy.stats.rv_discrete` object."""
         self._dist = dist
     
 class ContinuousDistribution(Distribution):
     
     def probability_between(self, a: float, b: float) -> float:
+        """Calculate the probability P(a <= X <= b), including both a and b."""
         return self.evaluate("cdf", b) - self.evaluate("cdf", a)
     
     def probability_at(self, a: float) -> float:
+        """Calculate the probability P(X == a). Always returns 0."""
         return 0
     
-    def apply_transform(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: Optional[float]=None, a: Optional[float]=None, b: Optional[float]=None) -> "CustomContinuousDistribution":
+    def apply_function(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: Optional[float]=None, a: Optional[float]=None, b: Optional[float]=None) -> "CustomContinuousDistribution":
+        """
+        Apply a function to the distribution to create a new distribution.
+        
+        Parameters
+        ----------
+        func: NumericFunction
+            The function to apply to the distribution.
+        *inverse_funcs: NumericFunction
+            The branches of the inverse of `func`. Currently, multiple branches are not implemented.
+        infinity_approximation: Optional[float], default=None
+            What value to use as an approximation for infinity when the original distribution's support is unbounded and the new distribution's support is not explicitly defined.
+        a, b: Optional[float], default=None
+            What values to use as the support of the new distribution. 
+        
+        Returns
+        -------
+        CustomContinuousDistribution
+            The new distribution.
+        """
         a0, b0 = self._dist.support()
         
         if len(inverse_funcs) == 0:
@@ -212,6 +278,24 @@ class ContinuousDistribution(Distribution):
         return self.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
     
     def display(self, pfunc: ProbabilityFunction, add: bool=False, color: Optional[str]=None, **kwargs) -> None:
+        """
+        Display a probability function.
+        
+        Parameters
+        ----------
+        pfunc: ProbabilityFunction
+            One of the supported probability function abbreviations. See `thurstat.pfunc`.
+        add: bool, default=False
+            Whether or not to start or add to an existing plot. `plt.show()` must be called later.
+        color: Optional[str], default=None
+            What color to use. Defaults to matplotlib's default blue color.
+        **kwargs
+            Additional keyword arguments to pass to `plt.stem`.
+            
+        Returns
+        -------
+        None
+        """
         a, b = self._dist.support()
         diff = b - a
         buffer = 0.2
@@ -225,16 +309,36 @@ class ContinuousDistribution(Distribution):
     
     @classmethod    
     def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> "CustomContinuousDistribution":
+        """
+        Create a distribution from a probability function.
+        
+        Parameters
+        ----------
+        pfunc: ProbabilityFunction
+            One of the supported probability function abbreviations. See `thurstat.pfunc`.
+        func: NumericFunction
+            The function itself.
+        a, b: Union[int, float]
+            The support of the distribution.
+            
+        Returns
+        -------
+        CustomContinuousDistribution
+            The new distribution.
+        """
         class NewScipyContinuousDistribution(scipy.stats.rv_continuous): pass
         setattr(NewScipyContinuousDistribution, "_" + pfunc, staticmethod(func))
         return CustomContinuousDistribution(NewScipyContinuousDistribution(a=a, b=b))
     
 class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
+    """A custom custom distribution."""
 
     def __init__(self, dist: scipy.stats.rv_continuous) -> None:
+        """Create a `CustomContinuousDistribution` object given a `scipy.stats.rv_continuous` object."""
         self._dist = dist
     
 class UniformDiscreteDistribution(DiscreteDistribution):
+    """A uniform discrete distribution."""
     
     options = [
         ["a", "b"], 
@@ -251,6 +355,7 @@ class UniformDiscreteDistribution(DiscreteDistribution):
         return scipy.stats.randint(low, high)
     
 class UniformContinuousDistribution(ContinuousDistribution):
+    """A uniform continuous distribution."""
     
     options = [
         ["a", "b"], 
