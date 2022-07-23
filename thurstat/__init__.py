@@ -1,6 +1,5 @@
 import abc
-from types import SimpleNamespace
-from typing import Callable, Dict, List, Optional, Type, Union
+from typing import Callable, Dict, List, NamedTuple, Optional, Type, Union
 from typing_extensions import Literal, Self
 
 import matplotlib.pyplot as plt
@@ -8,7 +7,24 @@ import numpy as np
 import scipy.stats
 from scipy.optimize import brentq, minimize_scalar
 
-pfunc = SimpleNamespace(PDF="pdf", PMF="pmf", CDF="cdf", SF="sf", PPF="ppf", ISF="ISF")
+__all__ = [
+    "pfunc",
+    "update_config",
+    "DiscreteDistribution", "ContinuousDistribution",
+    "CustomDiscreteDistribution", "CustomContinuousDistribution",
+    "UniformDiscreteDistribution",
+    "UniformContinuousDistribution",
+]
+
+class pfunc(NamedTuple):
+    """Acceptable pfunc abbreviations."""
+    PDF: str = "pdf"
+    PMF: str = "pmf"
+    CDF: str = "cdf"
+    SF : str = "sf"
+    PPF: str = "ppf"
+    ISF: str = "isf"
+    
 NumericFunction = Callable[[float], float]
 ProbabilityFunction = Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"]
 
