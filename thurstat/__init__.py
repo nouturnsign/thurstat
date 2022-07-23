@@ -12,9 +12,9 @@ __all__ = [
     "pfunc",
     "update_config",
     # base classes
-    "DiscreteDistribution", "ContinuousDistribution",
+    "Distribution", "DiscreteDistribution", "ContinuousDistribution",
     # instantiable equivalents of the base classes
-    "CustomDiscreteDistribution", "CustomContinuousDistribution",
+    "CustomDistribution", "CustomDiscreteDistribution", "CustomContinuousDistribution",
     # predefined discrete distributions
     "UniformDiscreteDistribution",
     # predefined continuous distributions
@@ -68,6 +68,7 @@ class Distribution(abc.ABC):
         self._dist = self.interpret_parameterization(parameters)
         if len(parameters) > 0:
             raise ParameterValidationError(given, self.options)
+        self.support = self._dist.support()
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
@@ -241,6 +242,10 @@ class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
     def __init__(self, dist: scipy.stats.rv_discrete) -> None:
         """Create a `CustomDiscreteDistribution` object given a `scipy.stats.rv_discrete` object."""
         self._dist = dist
+        self.support = self._dist.support()
+        self.median = self._dist.median()
+        self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
+        self.standard_deviation = self._dist.std()
     
 class ContinuousDistribution(Distribution):
     """The base class for continuous distributions. Do not instantiate this class."""
@@ -359,6 +364,10 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     def __init__(self, dist: scipy.stats.rv_continuous) -> None:
         """Create a `CustomContinuousDistribution` object given a `scipy.stats.rv_continuous` object."""
         self._dist = dist
+        self.support = self._dist.support()
+        self.median = self._dist.median()
+        self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
+        self.standard_deviation = self._dist.std()
     
 class UniformDiscreteDistribution(DiscreteDistribution):
     """A uniform discrete distribution."""
