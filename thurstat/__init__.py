@@ -221,6 +221,7 @@ class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
         self._dist = dist
     
 class ContinuousDistribution(Distribution):
+    """The base class for continuous distributions. Do not instantiate this class."""
     
     def probability_between(self, a: float, b: float) -> float:
         """Calculate the probability P(a <= X <= b), including both a and b."""
