@@ -39,7 +39,7 @@ from typing_extensions import Literal, Self
 
 pfunc = SimpleNamespace(PDF="pdf", PMF="pmf", CDF="cdf", PPF="ppf")
 NumericFunction = Callable[[float], float]
-ProbabilityFunction = Literal["pdf", "pmf", "cdf", "ppf"]
+ProbabilityFunction = Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"]
 
 config = {
     "infinity_approximation": 1e6,
