@@ -203,6 +203,10 @@ class DiscreteDistribution(Distribution):
         None
         """
         a, b = self._dist.support()
+        if a == -np.inf:
+            a = self.evaluate("ppf", 1 / config["infinity_approximation"])
+        if b == np.inf:
+            b = self.evaluate("ppf", 1 - 1 / config["infinity_approximation"])
         x = np.arange(a, b + 1)
         y = self.evaluate(pfunc, x)
         markerline, stemlines, baseline = plt.stem(x, y, basefmt=" ", use_line_collection=True, **kwargs)
@@ -325,6 +329,10 @@ class ContinuousDistribution(Distribution):
         None
         """
         a, b = self._dist.support()
+        if a == -np.inf:
+            a = self.evaluate("ppf", 1 / config["infinity_approximation"])
+        if b == np.inf:
+            b = self.evaluate("ppf", 1 - 1 / config["infinity_approximation"])
         diff = b - a
         buffer = 0.2
         x = np.linspace(a - diff * buffer, b + diff * buffer, int(diff * 200))
