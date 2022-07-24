@@ -65,7 +65,10 @@ class Distribution(abc.ABC):
     def __init__(self, **parameters: float) -> None:
         """Create a distribution object given the parameters as named keyword arguments."""
         given = list(parameters.keys())
-        self._dist = self.interpret_parameterization(parameters)
+        try:
+            self._dist = self.interpret_parameterization(parameters)
+        except UnboundLocalError:
+            raise ParameterValidationError(given, self.options)
         if len(parameters) > 0:
             raise ParameterValidationError(given, self.options)
         self.support = self._dist.support()
