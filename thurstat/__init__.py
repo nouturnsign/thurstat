@@ -135,7 +135,7 @@ class Distribution(abc.ABC):
         pass
     
     @abc.abstractmethod
-    def apply_function(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> Union["CustomDiscreteDistribution", "CustomContinuousDistribution"]:
+    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> Union["CustomDiscreteDistribution", "CustomContinuousDistribution"]:
         pass
     
     @abc.abstractmethod
@@ -170,7 +170,7 @@ class DiscreteDistribution(Distribution):
         """Calculate the probability P(X == a)."""
         return self.evaluate("pmf", a)
     
-    def apply_function(self, func: NumericFunction) -> "CustomDiscreteDistribution":
+    def apply_func(self, func: NumericFunction) -> "CustomDiscreteDistribution":
         """Apply a function to the distribution to create a new distribution."""
         a, b = self._dist.support()
         x = np.arange(a, b + 1)
@@ -265,7 +265,7 @@ class ContinuousDistribution(Distribution):
         """Calculate the probability P(X == a). Always returns 0."""
         return 0
     
-    def apply_function(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: Optional[float]=None, a: Optional[float]=None, b: Optional[float]=None) -> "CustomContinuousDistribution":
+    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: Optional[float]=None, a: Optional[float]=None, b: Optional[float]=None) -> "CustomContinuousDistribution":
         """
         Apply a function to the distribution to create a new distribution.
         
