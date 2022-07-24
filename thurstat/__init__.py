@@ -40,7 +40,7 @@ class Formula(object):
     """A formula-like that supports formula writing."""
     
     def __init__(self, func: Optional[NumericFunction]=None) -> None:
-        """"""
+        """Create a formula, optionally with a func. Defaults to the identity function."""
         if func is None:
             func = lambda x: x
         self.func = func
