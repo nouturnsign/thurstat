@@ -9,8 +9,7 @@ from scipy.optimize import brentq, minimize_scalar
 
 __all__ = [
     # global
-    "pfunc",
-    "update_config",
+    "pfunc", "update_config",
     # formula
     "FormulaVariable", "formula",
     # base classes
@@ -40,7 +39,7 @@ class FormulaVariable(object):
     """A formula-like that supports formula writing."""
     
     def __init__(self, func: Optional[NumericFunction]=None) -> None:
-        """Create a formula, optionally with a func. Defaults to the identity function."""
+        """Create a formula variable, optionally with a func. Defaults to the identity function."""
         if func is None:
             func = lambda x: x
         self.func = func
