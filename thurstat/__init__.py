@@ -12,7 +12,7 @@ __all__ = [
     "pfunc",
     "update_config",
     # formula
-    "Formula", "formula", "x",
+    "FormulaVariable", "formula",
     # base classes
     "Distribution", "DiscreteDistribution", "ContinuousDistribution",
     # instantiable equivalents of the base classes
@@ -36,7 +36,7 @@ class pfunc(NamedTuple):
     PPF: str = "ppf"
     ISF: str = "isf"
 
-class Formula(object):
+class FormulaVariable(object):
     """A formula-like that supports formula writing."""
     
     def __init__(self, func: Optional[NumericFunction]=None) -> None:
@@ -49,19 +49,19 @@ class Formula(object):
         return self.func(other)
     
     def __add__(self, other: Numeric) -> Self: 
-        return Formula(lambda x: self.func(x) + other)
+        return FormulaVariable(lambda x: self.func(x) + other)
     
     def __radd__(self, other: Numeric) -> Self: 
         return self + other
     
     def __sub__(self, other: Numeric) -> Self:
-        return Formula(lambda x: self.func(x) - other) 
+        return FormulaVariable(lambda x: self.func(x) - other) 
     
     def __rsub__(self, other: Numeric) -> Self:
-        return Formula(lambda x: other - self.func(x)) 
+        return FormulaVariable(lambda x: other - self.func(x)) 
     
     def __mul__(self, other: Numeric) -> Self: 
-        return Formula(lambda x: self.func(x) * other)
+        return FormulaVariable(lambda x: self.func(x) * other)
     
     def __rmul__(self, other: Numeric) -> Self: 
         return self * other
@@ -70,16 +70,16 @@ class Formula(object):
         return self * -1
     
     def __truediv__(self, other: Numeric) -> Self:
-        return Formula(lambda x: self.func(x) / other)
+        return FormulaVariable(lambda x: self.func(x) / other)
     
     def __rtruediv__(self, other: Numeric) -> Self:
-        return Formula(lambda x: other / self.func(x))
+        return FormulaVariable(lambda x: other / self.func(x))
     
     def __pow__(self, other: Numeric) -> Self:
-        return Formula(lambda x: self.func(x) ** other)
+        return FormulaVariable(lambda x: self.func(x) ** other)
         
     def __rpow__(self, other: Numeric) -> Self:
-        return Formula(lambda x: other ** self.func(x))
+        return FormulaVariable(lambda x: other ** self.func(x))
     
 class formula(object):
     """Decorator for converting functions to formulas."""
@@ -88,10 +88,8 @@ class formula(object):
         """Convert func to a formula."""
         self.func = func
         
-    def __call__(self, other: Formula) -> Formula:
-        return Formula(lambda x: self.func(other(x)))
-    
-x = Formula()
+    def __call__(self, other: FormulaVariable) -> FormulaVariable:
+        return FormulaVariable(lambda x: self.func(other(x)))
 
 config = {
     "infinity_approximation": 1e6,
