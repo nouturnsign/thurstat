@@ -11,6 +11,8 @@ __all__ = [
     # global
     "pfunc",
     "update_config",
+    # formula
+    "Formula", "formula", "x",
     # base classes
     "Distribution", "DiscreteDistribution", "ContinuousDistribution",
     # instantiable equivalents of the base classes
@@ -21,6 +23,10 @@ __all__ = [
     "UniformContinuousDistribution",
 ]
 
+Numeric = Union[int, float]
+NumericFunction = Callable[[Numeric], Numeric]
+ProbabilityFunction = Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"]
+
 class pfunc(NamedTuple):
     """Acceptable pfunc abbreviations."""
     PDF: str = "pdf"
@@ -29,9 +35,63 @@ class pfunc(NamedTuple):
     SF : str = "sf"
     PPF: str = "ppf"
     ISF: str = "isf"
+
+class Formula(object):
+    """A formula-like that supports formula writing."""
     
-NumericFunction = Callable[[float], float]
-ProbabilityFunction = Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"]
+    def __init__(self, func: Optional[NumericFunction]=None) -> None:
+        """"""
+        if func is None:
+            func = lambda x: x
+        self.func = func
+           
+    def __call__(self, other: Self) -> NumericFunction:
+        return self.func(other)
+    
+    def __add__(self, other: Numeric) -> Self: 
+        return Formula(lambda x: self.func(x) + other)
+    
+    def __radd__(self, other: Numeric) -> Self: 
+        return self + other
+    
+    def __sub__(self, other: Numeric) -> Self:
+        return Formula(lambda x: self.func(x) - other) 
+    
+    def __rsub__(self, other: Numeric) -> Self:
+        return Formula(lambda x: other - self.func(x)) 
+    
+    def __mul__(self, other: Numeric) -> Self: 
+        return Formula(lambda x: self.func(x) * other)
+    
+    def __rmul__(self, other: Numeric) -> Self: 
+        return self * other
+    
+    def __neg__(self) -> Self:
+        return self * -1
+    
+    def __truediv__(self, other: Numeric) -> Self:
+        return Formula(lambda x: self.func(x) / other)
+    
+    def __rtruediv__(self, other: Numeric) -> Self:
+        return Formula(lambda x: other / self.func(x))
+    
+    def __pow__(self, other: Numeric) -> Self:
+        return Formula(lambda x: self.func(x) ** other)
+        
+    def __rpow__(self, other: Numeric) -> Self:
+        return Formula(lambda x: other ** self.func(x))
+    
+class formula(object):
+    """Decorator for converting functions to formulas."""
+    
+    def __init__(self, func: NumericFunction) -> None:
+        """Convert func to a formula."""
+        self.func = func
+        
+    def __call__(self, other: Formula) -> Formula:
+        return Formula(lambda x: self.func(other(x)))
+    
+x = Formula()
 
 config = {
     "infinity_approximation": 1e6,
@@ -144,7 +204,7 @@ class Distribution(abc.ABC):
     
     @classmethod
     @abc.abstractmethod
-    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Union[int, float], b: Union[int, float]) -> Type[Self]:
+    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Numeric, b: Numeric) -> Type[Self]:
         pass
     
 class CustomDistribution(Distribution):
@@ -221,7 +281,7 @@ class DiscreteDistribution(Distribution):
             plt.show()
     
     @classmethod    
-    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Union[int, float], b: Union[int, float]) -> "CustomDiscreteDistribution":
+    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Numeric, b: Numeric) -> "CustomDiscreteDistribution":
         """
         Create a distribution from a probability function.
         
@@ -231,7 +291,7 @@ class DiscreteDistribution(Distribution):
             One of the supported probability function abbreviations. See `thurstat.pfunc`.
         func: NumericFunction
             The function itself.
-        a, b: Union[int, float]
+        a, b: Numeric
             The support of the distribution.
             
         Returns
@@ -357,7 +417,7 @@ class ContinuousDistribution(Distribution):
             One of the supported probability function abbreviations. See `thurstat.pfunc`.
         func: NumericFunction
             The function itself.
-        a, b: Union[int, float]
+        a, b: Numeric
             The support of the distribution.
             
         Returns
