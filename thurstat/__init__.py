@@ -6,6 +6,7 @@ from typing_extensions import Literal, Self
 
 import matplotlib.pyplot as plt
 import numpy as np
+import portion as P
 import scipy.stats
 from scipy.optimize import brentq, minimize_scalar
 
@@ -75,7 +76,7 @@ class Distribution(abc.ABC):
             raise ParameterValidationError(given, self.options)
         if len(parameters) > 0:
             raise ParameterValidationError(given, self.options)
-        self.support = self._dist.support()
+        self.support = P.closed(*self._dist.support()) # automatically converts to open if necessary
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
@@ -291,7 +292,7 @@ class DiscreteDistribution(Distribution):
         CustomDiscreteDistriibution
             The new distribution.
         """
-        a0, b0 = self.support
+        a0, b0 = self.support.lower, self.support.upper
         
         if (infinity_approximation is None) and (a is None) and (b is None):
             infinity_approximation = config["infinity_approximation"]
@@ -339,7 +340,7 @@ class DiscreteDistribution(Distribution):
         -------
         None
         """
-        a, b = self.support
+        a, b = self.support.lower, self.support.upper
         if a == -np.inf:
             a = self.evaluate("ppf", 1 / config["infinity_approximation"])
         if b == np.inf:
@@ -379,12 +380,12 @@ class DiscreteDistribution(Distribution):
 
     def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType = None) -> Self:
         if isinstance(other, (int, float)):
-            a, b = self.support
+            a, b = self.support.lower, self.support.upper
             a2, b2 = sorted((op(a, other), op(b, other)))
             return self.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
         elif isinstance(other, DiscreteDistribution):
-            a0, b0 = self.support
-            a1, b1 = other.support
+            a0, b0 = self.support.lower, self.support.upper
+            a1, b1 = other.support.lower, other.support.upper
             a, b = np.arange(a0, b0 + 1), np.arange(a1, b1 + 1)
             pmf = {}
             for x, y in np.nditer(np.array(np.meshgrid(a, b)), flags=['external_loop'], order='F'):
@@ -400,7 +401,7 @@ class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
     def __init__(self, dist: scipy.stats.rv_discrete) -> None:
         """Create a `CustomDiscreteDistribution` object given a `scipy.stats.rv_discrete` object."""
         self._dist = dist
-        self.support = self._dist.support()
+        self.support = P.closed(*self._dist.support())
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
@@ -436,7 +437,7 @@ class ContinuousDistribution(Distribution):
         CustomContinuousDistribution
             The new distribution.
         """
-        a0, b0 = self.support
+        a0, b0 = self.support.lower, self.support.upper
         
         if len(inverse_funcs) == 0:
             inverse_func = np.vectorize(lambda y: brentq(lambda x: func(x) - y, a=a0, b=b0))
@@ -482,7 +483,7 @@ class ContinuousDistribution(Distribution):
         -------
         None
         """
-        a, b = self.support
+        a, b = self.support.lower, self.support.upper
         if a == -np.inf:
             a = self.evaluate("ppf", 1 / config["infinity_approximation"])
         if b == np.inf:
@@ -530,7 +531,7 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     def __init__(self, dist: scipy.stats.rv_continuous) -> None:
         """Create a `CustomContinuousDistribution` object given a `scipy.stats.rv_continuous` object."""
         self._dist = dist
-        self.support = self._dist.support()
+        self.support = P.closed(*self._dist.support())
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
