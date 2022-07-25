@@ -344,7 +344,7 @@ class DiscreteDistribution(Distribution):
         -------
         None
         """
-        a, b = self._dist.support()
+        a, b = self.support
         if a == -np.inf:
             a = self.evaluate("ppf", 1 / config["infinity_approximation"])
         if b == np.inf:
@@ -382,6 +382,51 @@ class DiscreteDistribution(Distribution):
         setattr(NewScipyDiscreteDistribution, "_" + pfunc, staticmethod(func))
         return CustomDiscreteDistribution(NewScipyDiscreteDistribution(a=a, b=b))
     
+    def __add__(self, other: Union[Numeric, Self]) -> Self: 
+        if isinstance(other, (int, float)):
+            a, b = self.support
+            return self.from_pfunc("pmf", lambda x: self.evaluate("pmf", x - other), a + other, b + other)
+        elif isinstance(other, DiscreteDistribution):
+            a0, b0 = self.support
+            a1, b1 = other.support
+            a, b = np.arange(a0, b0 + 1), np.arange(a1, b1 + 1)
+            pmf = {}
+            for x, y in np.nditer(np.array(np.meshgrid(a, b)), flags=['external_loop'], order='F'):
+                pmf[x + y] = pmf.get(x + y, 0) + self.evaluate("pmf", x) * other.evaluate("pmf", y)
+            return self.from_pfunc("pmf", np.vectorize(lambda a: pmf.get(a, 0)), a0 + a1, b0 + b1)
+        else:
+            raise NotImplementedError(f"Adding objects of type {type(self)} and {type(other)} is currently undefined.")
+    
+    def __radd__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    def __sub__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    def __rsub__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    def __mul__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    def __rmul__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    def __neg__(self) -> Self:
+        pass
+    
+    def __truediv__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    def __rtruediv__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    def __pow__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+     
+    def __rpow__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
 class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
     """A custom discrete distribution."""
     
@@ -389,6 +434,7 @@ class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
         """Create a `CustomDiscreteDistribution` object given a `scipy.stats.rv_discrete` object."""
         self._dist = dist
         self.support = self._dist.support()
+        print(self.support)
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
@@ -424,7 +470,7 @@ class ContinuousDistribution(Distribution):
         CustomContinuousDistribution
             The new distribution.
         """
-        a0, b0 = self._dist.support()
+        a0, b0 = self.support
         
         if len(inverse_funcs) == 0:
             inverse_func = np.vectorize(lambda y: brentq(lambda x: func(x) - y, a=a0, b=b0))
@@ -470,7 +516,7 @@ class ContinuousDistribution(Distribution):
         -------
         None
         """
-        a, b = self._dist.support()
+        a, b = self.support
         if a == -np.inf:
             a = self.evaluate("ppf", 1 / config["infinity_approximation"])
         if b == np.inf:
@@ -507,6 +553,39 @@ class ContinuousDistribution(Distribution):
         class NewScipyContinuousDistribution(scipy.stats.rv_continuous): pass
         setattr(NewScipyContinuousDistribution, "_" + pfunc, staticmethod(func))
         return CustomContinuousDistribution(NewScipyContinuousDistribution(a=a, b=b))
+    
+    def __add__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    def __radd__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    def __sub__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    def __rsub__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    def __mul__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    def __rmul__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    def __neg__(self) -> Self:
+        pass
+    
+    def __truediv__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    def __rtruediv__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    def __pow__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+     
+    def __rpow__(self, other: Union[Numeric, Self]) -> Self:
+        pass
     
 class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     """A custom custom distribution."""
