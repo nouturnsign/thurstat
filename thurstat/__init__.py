@@ -276,9 +276,42 @@ class DiscreteDistribution(Distribution):
         """Calculate the probability P(X == a)."""
         return self.evaluate("pmf", a)
     
-    def apply_func(self, func: NumericFunction) -> "CustomDiscreteDistribution":
-        """Apply a function to the distribution to create a new distribution."""
-        a, b = self._dist.support()
+    def apply_func(self, func: NumericFunction, *, infinity_approximation: Optional[int]=None, a: Optional[int]=None, b: Optional[int]=None) -> "CustomDiscreteDistribution":
+        """
+        Apply a function to the distribution to create a new distribution.
+        
+        Parameters
+        ----------
+        func: NumericFunction
+            The function to apply to the distribution.
+        *inverse_funcs: NumericFunction
+            The branches of the inverse of `func`. Currently, multiple branches are not implemented.
+        infinity_approximation: Optional[float], default=None
+            What value to use as an approximation for infinity when the original distribution's support is unbounded and the new distribution's support is not explicitly defined.
+        a, b: Optional[float], default=None
+            What values to use as the support of the new distribution. 
+        
+        Returns
+        -------
+        CustomDiscreteDistriibution
+            The new distribution.
+        """
+        a0, b0 = self.support
+        
+        if (infinity_approximation is None) and (a is None) and (b is None):
+            infinity_approximation = config["infinity_approximation"]
+        
+        if infinity_approximation is not None:
+            if a0 == -np.inf:
+                a0 = -infinity_approximation
+            if b0 == np.inf:
+                b0 = infinity_approximation
+                
+        if a is None:
+            a = a0
+        if b is None:
+            b = b0
+                
         x = np.arange(a, b + 1)
         y = self.evaluate("pmf", x)
         
