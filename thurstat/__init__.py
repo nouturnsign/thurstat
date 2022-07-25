@@ -35,61 +35,6 @@ class pfunc(NamedTuple):
     PPF: str = "ppf"
     ISF: str = "isf"
 
-class FormulaVariable(object):
-    """A formula-like that supports formula writing."""
-    
-    def __init__(self, func: Optional[NumericFunction]=None) -> None:
-        """Create a formula variable, optionally with a func. Defaults to the identity function."""
-        if func is None:
-            func = lambda x: x
-        self.func = func
-           
-    def __call__(self, other: Self) -> NumericFunction:
-        return self.func(other)
-    
-    def __add__(self, other: Numeric) -> Self: 
-        return FormulaVariable(lambda x: self.func(x) + other)
-    
-    def __radd__(self, other: Numeric) -> Self: 
-        return self + other
-    
-    def __sub__(self, other: Numeric) -> Self:
-        return FormulaVariable(lambda x: self.func(x) - other) 
-    
-    def __rsub__(self, other: Numeric) -> Self:
-        return FormulaVariable(lambda x: other - self.func(x)) 
-    
-    def __mul__(self, other: Numeric) -> Self: 
-        return FormulaVariable(lambda x: self.func(x) * other)
-    
-    def __rmul__(self, other: Numeric) -> Self: 
-        return self * other
-    
-    def __neg__(self) -> Self:
-        return self * -1
-    
-    def __truediv__(self, other: Numeric) -> Self:
-        return FormulaVariable(lambda x: self.func(x) / other)
-    
-    def __rtruediv__(self, other: Numeric) -> Self:
-        return FormulaVariable(lambda x: other / self.func(x))
-    
-    def __pow__(self, other: Numeric) -> Self:
-        return FormulaVariable(lambda x: self.func(x) ** other)
-        
-    def __rpow__(self, other: Numeric) -> Self:
-        return FormulaVariable(lambda x: other ** self.func(x))
-    
-class formula(object):
-    """Decorator for converting functions to formulas."""
-    
-    def __init__(self, func: NumericFunction) -> None:
-        """Convert func to a formula."""
-        self.func = func
-        
-    def __call__(self, other: FormulaVariable) -> FormulaVariable:
-        return FormulaVariable(lambda x: self.func(other(x)))
-
 config = {
     "infinity_approximation": 1e6,
     "default_color": "C0",
@@ -203,6 +148,110 @@ class Distribution(abc.ABC):
     @abc.abstractmethod
     def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Numeric, b: Numeric) -> Type[Self]:
         pass
+    
+    @abc.abstractmethod
+    def __add__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    @abc.abstractmethod
+    def __radd__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    @abc.abstractmethod
+    def __sub__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    @abc.abstractmethod
+    def __rsub__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    @abc.abstractmethod
+    def __mul__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    @abc.abstractmethod
+    def __rmul__(self, other: Union[Numeric, Self]) -> Self: 
+        pass
+    
+    @abc.abstractmethod
+    def __neg__(self) -> Self:
+        pass
+    
+    @abc.abstractmethod
+    def __truediv__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    @abc.abstractmethod
+    def __rtruediv__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+    @abc.abstractmethod
+    def __pow__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+     
+    @abc.abstractmethod   
+    def __rpow__(self, other: Union[Numeric, Self]) -> Self:
+        pass
+    
+class FormulaVariable(object):
+    """A formula-like that supports formula writing."""
+    
+    def __init__(self, func: Optional[NumericFunction]=None) -> None:
+        """Create a formula variable, optionally with a func. Defaults to the identity function."""
+        if func is None:
+            func = lambda x: x
+        self.func = func
+           
+    def __call__(self, other: Self) -> NumericFunction:
+        return self.func(other)
+    
+    def __add__(self, other: Numeric) -> Self: 
+        return FormulaVariable(lambda x: self.func(x) + other)
+    
+    def __radd__(self, other: Numeric) -> Self: 
+        return self + other
+    
+    def __sub__(self, other: Numeric) -> Self:
+        return FormulaVariable(lambda x: self.func(x) - other) 
+    
+    def __rsub__(self, other: Numeric) -> Self:
+        return FormulaVariable(lambda x: other - self.func(x)) 
+    
+    def __mul__(self, other: Numeric) -> Self: 
+        return FormulaVariable(lambda x: self.func(x) * other)
+    
+    def __rmul__(self, other: Numeric) -> Self: 
+        return self * other
+    
+    def __neg__(self) -> Self:
+        return self * -1
+    
+    def __truediv__(self, other: Numeric) -> Self:
+        return FormulaVariable(lambda x: self.func(x) / other)
+    
+    def __rtruediv__(self, other: Numeric) -> Self:
+        return FormulaVariable(lambda x: other / self.func(x))
+    
+    def __pow__(self, other: Numeric) -> Self:
+        return FormulaVariable(lambda x: self.func(x) ** other)
+        
+    def __rpow__(self, other: Numeric) -> Self:
+        return FormulaVariable(lambda x: other ** self.func(x))
+    
+class formula(object):
+    """Decorator for converting functions to formulas."""
+    
+    def __init__(self, func: NumericFunction) -> None:
+        """Convert func to a formula."""
+        self.func = func
+        
+    def __call__(self, other: Union[FormulaVariable, Distribution]) -> Union[FormulaVariable, Distribution]:
+        if isinstance(other, FormulaVariable):
+            return FormulaVariable(lambda x: self.func(other(x)))
+        elif isinstance(other, Distribution):
+            return other.apply_func(self.func)
+        else:
+            raise TypeError(f"Formulas cannot be called on objects of class {type(other)}.")
     
 class CustomDistribution(Distribution):
     """The base class for custom distributions, defined by a scipy rv. Do not instantiate this class."""
