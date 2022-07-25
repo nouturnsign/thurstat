@@ -532,6 +532,7 @@ class ContinuousDistribution(Distribution):
         return CustomContinuousDistribution(NewScipyContinuousDistribution(a=a, b=b))
     
     def discretize(self) -> "DiscreteDistribution":
+        """Approximate the continuous distribution with a discrete distribution."""
         return DiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
     
     def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType) -> Self:
