@@ -40,6 +40,7 @@ class pfunc(NamedTuple):
 
 config = {
     "infinity_approximation": 1e6,
+    "ratio": 200,
     "default_color": "C0",
     "local_seed": None,
     "global_seed": None,
@@ -490,8 +491,7 @@ class ContinuousDistribution(Distribution):
             b = self.evaluate("ppf", 1 - 1 / config["infinity_approximation"])
         diff = b - a
         buffer = 0.2
-        ratio = 200
-        x = np.linspace(a - diff * buffer, b + diff * buffer, int(diff * ratio))
+        x = np.linspace(a - diff * buffer, b + diff * buffer, int(diff * config["ratio"]))
         y = self.evaluate(pfunc, x)
         if color is None:
             color = config["default_color"]
