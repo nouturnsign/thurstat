@@ -523,7 +523,8 @@ class ContinuousDistribution(Distribution):
             b = self.evaluate("ppf", 1 - 1 / config["infinity_approximation"])
         diff = b - a
         buffer = 0.2
-        x = np.linspace(a - diff * buffer, b + diff * buffer, int(diff * 200))
+        ratio = 200
+        x = np.linspace(a - diff * buffer, b + diff * buffer, int(diff * ratio))
         y = self.evaluate(pfunc, x)
         if color is None:
             color = config["default_color"]
