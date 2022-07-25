@@ -531,6 +531,9 @@ class ContinuousDistribution(Distribution):
         setattr(NewScipyContinuousDistribution, "_" + pfunc, staticmethod(func))
         return CustomContinuousDistribution(NewScipyContinuousDistribution(a=a, b=b))
     
+    def discretize(self) -> "DiscreteDistribution":
+        return DiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
+    
     def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType) -> Self:
         raise NotImplementedError("Binary operation on continuous distributions are undefined right now.")
     
