@@ -380,13 +380,22 @@ class DiscreteDistribution(Distribution):
         return CustomDiscreteDistribution(NewScipyDiscreteDistribution(a=a, b=b))
 
     def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType = None) -> Self:
+        """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
             a2, b2 = sorted((op(a, other), op(b, other)))
             return self.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
         elif isinstance(other, DiscreteDistribution):
             a0, b0 = self.support.lower, self.support.upper
+            if a0 == -np.inf:
+                a0 = -config["infinity_approximation"]
+            if b0 == np.inf:
+                b0 = config["infinity_approximation"]
             a1, b1 = other.support.lower, other.support.upper
+            if a1 == -np.inf:
+                a1 = -config["infinity_approximation"]
+            if b1 == np.inf:
+                b1 = config["infinity_approximation"]
             a, b = np.arange(a0, b0 + 1), np.arange(a1, b1 + 1)
             pmf = {}
             for x, y in np.nditer(np.array(np.meshgrid(a, b)), flags=['external_loop'], order='F'):
