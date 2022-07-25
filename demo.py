@@ -8,7 +8,8 @@ warnings.filterwarnings("ignore")
 
 U = UniformDiscreteDistribution(a=0, b=3)
 V = UniformDiscreteDistribution(a=2, b=5)
-W = U + V
+W = 3 - U * V
+print(W.mean)
 W.display("pmf")
 
 @formula

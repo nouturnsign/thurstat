@@ -1,4 +1,6 @@
 import abc
+import operator
+from types import BuiltinFunctionType
 from typing import Callable, Dict, List, NamedTuple, Optional, Type, Union
 from typing_extensions import Literal, Self
 
@@ -150,48 +152,41 @@ class Distribution(abc.ABC):
         pass
     
     @abc.abstractmethod
+    def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType) -> Self:
+        pass
+    
     def __add__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
-    
-    @abc.abstractmethod
+        return self.apply_infix_operator(other, operator.add, operator.sub)
+
     def __radd__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
+        return self + other
     
-    @abc.abstractmethod
     def __sub__(self, other: Union[Numeric, Self]) -> Self:
-        pass
+        return self.apply_infix_operator(other, operator.sub, operator.add)
     
-    @abc.abstractmethod
     def __rsub__(self, other: Union[Numeric, Self]) -> Self:
-        pass
+        return -(self - other)
     
-    @abc.abstractmethod
     def __mul__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
+        return self.apply_infix_operator(other, operator.mul, operator.truediv)
     
-    @abc.abstractmethod
     def __rmul__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
+        return self * other
     
-    @abc.abstractmethod
     def __neg__(self) -> Self:
-        pass
+        return self * -1
     
-    @abc.abstractmethod
     def __truediv__(self, other: Union[Numeric, Self]) -> Self:
-        pass
+        raise NotImplementedError("Division is currently not implemented for distributions.")
     
-    @abc.abstractmethod
     def __rtruediv__(self, other: Union[Numeric, Self]) -> Self:
-        pass
+        raise NotImplementedError("Division is currently not implemented for distributions.")
     
-    @abc.abstractmethod
     def __pow__(self, other: Union[Numeric, Self]) -> Self:
-        pass
+        raise NotImplementedError("Exponentiation is currently not implemented for distributions.")
      
-    @abc.abstractmethod   
     def __rpow__(self, other: Union[Numeric, Self]) -> Self:
-        pass
+        raise NotImplementedError("Exponentiation is currently not implemented for distributions.")
     
 class FormulaVariable(object):
     """A formula-like that supports formula writing."""
@@ -381,51 +376,23 @@ class DiscreteDistribution(Distribution):
         class NewScipyDiscreteDistribution(scipy.stats.rv_discrete): pass
         setattr(NewScipyDiscreteDistribution, "_" + pfunc, staticmethod(func))
         return CustomDiscreteDistribution(NewScipyDiscreteDistribution(a=a, b=b))
-    
-    def __add__(self, other: Union[Numeric, Self]) -> Self: 
+
+    def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType = None) -> Self:
         if isinstance(other, (int, float)):
             a, b = self.support
-            return self.from_pfunc("pmf", lambda x: self.evaluate("pmf", x - other), a + other, b + other)
+            a2, b2 = sorted((op(a, other), op(b, other)))
+            return self.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
         elif isinstance(other, DiscreteDistribution):
             a0, b0 = self.support
             a1, b1 = other.support
             a, b = np.arange(a0, b0 + 1), np.arange(a1, b1 + 1)
             pmf = {}
             for x, y in np.nditer(np.array(np.meshgrid(a, b)), flags=['external_loop'], order='F'):
-                pmf[x + y] = pmf.get(x + y, 0) + self.evaluate("pmf", x) * other.evaluate("pmf", y)
-            return self.from_pfunc("pmf", np.vectorize(lambda a: pmf.get(a, 0)), a0 + a1, b0 + b1)
+                pmf[op(x, y)] = pmf.get(op(x, y), 0) + self.evaluate("pmf", x) * other.evaluate("pmf", y)
+            a2, b2 = min(pmf.keys()), max(pmf.keys())
+            return self.from_pfunc("pmf", np.vectorize(lambda a: pmf.get(a, 0)), a2, b2)
         else:
-            raise NotImplementedError(f"Adding objects of type {type(self)} and {type(other)} is currently undefined.")
-    
-    def __radd__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
-    
-    def __sub__(self, other: Union[Numeric, Self]) -> Self:
-        pass
-    
-    def __rsub__(self, other: Union[Numeric, Self]) -> Self:
-        pass
-    
-    def __mul__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
-    
-    def __rmul__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
-    
-    def __neg__(self) -> Self:
-        pass
-    
-    def __truediv__(self, other: Union[Numeric, Self]) -> Self:
-        pass
-    
-    def __rtruediv__(self, other: Union[Numeric, Self]) -> Self:
-        pass
-    
-    def __pow__(self, other: Union[Numeric, Self]) -> Self:
-        pass
-     
-    def __rpow__(self, other: Union[Numeric, Self]) -> Self:
-        pass
+            raise NotImplementedError(f"Binary operation between objects of type {type(self)} and {type(other)} is currently undefined.")
     
 class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
     """A custom discrete distribution."""
@@ -434,7 +401,6 @@ class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
         """Create a `CustomDiscreteDistribution` object given a `scipy.stats.rv_discrete` object."""
         self._dist = dist
         self.support = self._dist.support()
-        print(self.support)
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
@@ -555,38 +521,8 @@ class ContinuousDistribution(Distribution):
         setattr(NewScipyContinuousDistribution, "_" + pfunc, staticmethod(func))
         return CustomContinuousDistribution(NewScipyContinuousDistribution(a=a, b=b))
     
-    def __add__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
-    
-    def __radd__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
-    
-    def __sub__(self, other: Union[Numeric, Self]) -> Self:
-        pass
-    
-    def __rsub__(self, other: Union[Numeric, Self]) -> Self:
-        pass
-    
-    def __mul__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
-    
-    def __rmul__(self, other: Union[Numeric, Self]) -> Self: 
-        pass
-    
-    def __neg__(self) -> Self:
-        pass
-    
-    def __truediv__(self, other: Union[Numeric, Self]) -> Self:
-        pass
-    
-    def __rtruediv__(self, other: Union[Numeric, Self]) -> Self:
-        pass
-    
-    def __pow__(self, other: Union[Numeric, Self]) -> Self:
-        pass
-     
-    def __rpow__(self, other: Union[Numeric, Self]) -> Self:
-        pass
+    def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType) -> Self:
+        raise NotImplementedError("Binary operation on continuous distributions are undefined right now.")
     
 class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     """A custom custom distribution."""
