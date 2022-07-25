@@ -6,6 +6,11 @@ from thurstat import *
 
 warnings.filterwarnings("ignore")
 
+U = UniformDiscreteDistribution(a=0, b=3)
+V = UniformDiscreteDistribution(a=2, b=5)
+W = U + V
+W.display("pmf")
+
 @formula
 def exp(x):
     return np.exp(x)
