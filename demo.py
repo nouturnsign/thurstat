@@ -25,3 +25,6 @@ X = (
 print(X.support)
 print(X.mean)
 X.display("pdf")
+
+Q = UniformContinuousDistribution(a=0, b=20)
+Q.discretize().display("pmf")
