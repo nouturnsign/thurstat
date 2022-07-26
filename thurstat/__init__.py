@@ -185,7 +185,7 @@ class Distribution(abc.ABC):
         raise NotImplementedError("Division is currently not implemented for distributions.")
     
     def __rtruediv__(self, other: Union[Numeric, Self]) -> Self:
-        raise NotImplementedError("Division is currently not implemented for distributions.")
+        raise other * self ** -1
     
     def __pow__(self, other: Union[Numeric, Self]) -> Self:
         raise NotImplementedError("Exponentiation is currently not implemented for distributions.")
