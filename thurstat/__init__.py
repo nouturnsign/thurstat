@@ -6,7 +6,7 @@ from typing_extensions import Literal, Self
 
 import matplotlib.pyplot as plt
 import numpy as np
-import portion as P
+import portion
 import scipy.stats
 from scipy.integrate import quad_vec
 from scipy.interpolate import interp1d
@@ -80,7 +80,7 @@ class Distribution(abc.ABC):
             raise ParameterValidationError(given, self.options)
         if len(parameters) > 0:
             raise ParameterValidationError(given, self.options)
-        self.support = P.closed(*self._dist.support())
+        self.support = portion.closed(*self._dist.support())
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
@@ -414,7 +414,7 @@ class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
     def __init__(self, dist: scipy.stats.rv_discrete) -> None:
         """Create a `CustomDiscreteDistribution` object given a `scipy.stats.rv_discrete` object."""
         self._dist = dist
-        self.support = P.closed(*self._dist.support())
+        self.support = portion.closed(*self._dist.support())
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
