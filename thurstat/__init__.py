@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import portion as P
 import scipy.stats
+from scipy.integrate import quad_vec
+from scipy.interpolate import interp1d
 from scipy.optimize import brentq, minimize_scalar
 
 __all__ = [
@@ -40,6 +42,7 @@ class pfunc(NamedTuple):
 
 config = {
     "infinity_approximation": 1e6,
+    "exact": False,
     "ratio": 200,
     "default_color": "C0",
     "local_seed": None,
@@ -77,7 +80,7 @@ class Distribution(abc.ABC):
             raise ParameterValidationError(given, self.options)
         if len(parameters) > 0:
             raise ParameterValidationError(given, self.options)
-        self.support = P.closed(*self._dist.support()) # automatically converts to open if necessary
+        self.support = P.closed(*self._dist.support())
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
@@ -536,7 +539,44 @@ class ContinuousDistribution(Distribution):
         return DiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
     
     def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType) -> Self:
-        raise NotImplementedError("Binary operation on continuous distributions are undefined right now.")
+        """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
+        if isinstance(other, (int, float)):
+            a, b = self.support.lower, self.support.upper
+            a2, b2 = sorted((op(a, other), op(b, other)))
+            return self.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
+        elif isinstance(other, ContinuousDistribution):
+            a0, b0 = self.support.lower, self.support.upper
+            if a0 == -np.inf:
+                a0 = -config["infinity_approximation"]
+            if b0 == np.inf:
+                b0 = config["infinity_approximation"]
+            a1, b1 = other.support.lower, other.support.upper
+            if a1 == -np.inf:
+                a1 = -config["infinity_approximation"]
+            if b1 == np.inf:
+                b1 = config["infinity_approximation"]
+            values = op(a0, a1), op(a0, b1), op(b0, a0), op(b0, b1)
+            a2, b2 = min(values), max(values)
+            
+            exact_pdf = lambda z: quad_vec(lambda x: other.evaluate("pdf", inv_op(z, x)) * self.evaluate("pdf", x) * abs(1 if op != operator.mul and op != operator.truediv else inv_op(1, x + 1 / config["infinity_approximation"])), a=-np.inf, b=np.inf)[0]
+            if config["exact"]:
+                return self.from_pfunc("pdf", exact_pdf, a2, b2) 
+            
+            diff = b2 - a2
+            x = np.linspace(a2, b2, int(diff) * config["ratio"])
+            
+            approximate_pdf = exact_pdf(x)          
+            @np.vectorize
+            def approximate_cdf(z):
+                i = np.searchsorted(x, z, side="right")
+                res = np.trapz(approximate_pdf[:i], x[:i])
+                return res
+            y = approximate_cdf(x)
+            cdf = interp1d(x[:-1], y[:-1], bounds_error=False, fill_value=(0, 1), assume_sorted=True)
+            
+            return self.from_pfunc("cdf", cdf, a2, b2)
+        else:
+            raise NotImplementedError(f"Binary operation between objects of type {type(self)} and {type(other)} is currently undefined.")
     
 class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     """A custom custom distribution."""

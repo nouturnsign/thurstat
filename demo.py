@@ -6,6 +6,15 @@ from thurstat import *
 
 warnings.filterwarnings("ignore")
 
+Q = UniformContinuousDistribution(a=0, b=20)
+Q.discretize().display("pmf")
+
+R = UniformContinuousDistribution(a=0, b=5)
+S = UniformContinuousDistribution(a=2, b=6)
+T = R + S
+print(T.variance)
+T.display("pdf")
+
 U = UniformDiscreteDistribution(a=0, b=3)
 V = UniformDiscreteDistribution(a=2, b=5)
 W = 3 - U * V
@@ -25,6 +34,3 @@ X = (
 print(X.support)
 print(X.mean)
 X.display("pdf")
-
-Q = UniformContinuousDistribution(a=0, b=20)
-Q.discretize().display("pmf")
