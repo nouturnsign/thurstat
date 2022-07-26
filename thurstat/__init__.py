@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import abc
 import operator
 from types import BuiltinFunctionType
@@ -276,7 +278,7 @@ class DiscreteDistribution(Distribution):
         """Calculate the probability P(X == a)."""
         return self.evaluate("pmf", a)
     
-    def apply_func(self, func: NumericFunction, *, infinity_approximation: Optional[int]=None, a: Optional[int]=None, b: Optional[int]=None) -> "CustomDiscreteDistribution":
+    def apply_func(self, func: NumericFunction, *, infinity_approximation: Optional[int]=None, a: Optional[int]=None, b: Optional[int]=None) -> CustomDiscreteDistribution:
         """
         Apply a function to the distribution to create a new distribution.
         
@@ -360,7 +362,7 @@ class DiscreteDistribution(Distribution):
             plt.show()
     
     @classmethod    
-    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Numeric, b: Numeric) -> "CustomDiscreteDistribution":
+    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Numeric, b: Numeric) -> CustomDiscreteDistribution:
         """
         Create a distribution from a probability function.
         
@@ -430,7 +432,7 @@ class ContinuousDistribution(Distribution):
         """Calculate the probability P(X == a). Always returns 0."""
         return 0
     
-    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: Optional[float]=None, a: Optional[float]=None, b: Optional[float]=None) -> "CustomContinuousDistribution":
+    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: Optional[float]=None, a: Optional[float]=None, b: Optional[float]=None) -> CustomContinuousDistribution:
         """
         Apply a function to the distribution to create a new distribution.
         
@@ -512,7 +514,7 @@ class ContinuousDistribution(Distribution):
             plt.show()
     
     @classmethod    
-    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> "CustomContinuousDistribution":
+    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> CustomContinuousDistribution:
         """
         Create a distribution from a probability function.
         
@@ -534,7 +536,7 @@ class ContinuousDistribution(Distribution):
         setattr(NewScipyContinuousDistribution, "_" + pfunc, staticmethod(func))
         return CustomContinuousDistribution(NewScipyContinuousDistribution(a=a, b=b))
     
-    def discretize(self) -> "DiscreteDistribution":
+    def discretize(self) -> DiscreteDistribution:
         """Approximate the continuous distribution with a discrete distribution."""
         return DiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
     
@@ -584,7 +586,7 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     def __init__(self, dist: scipy.stats.rv_continuous) -> None:
         """Create a `CustomContinuousDistribution` object given a `scipy.stats.rv_continuous` object."""
         self._dist = dist
-        self.support = P.closed(*self._dist.support())
+        self.support = portion.closed(*self._dist.support())
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
