@@ -23,6 +23,8 @@ __all__ = [
     "Distribution", "DiscreteDistribution", "ContinuousDistribution",
     # instantiable equivalents of the base classes
     "CustomDistribution", "CustomDiscreteDistribution", "CustomContinuousDistribution",
+    # events and probability
+    "P",
     # predefined discrete distributions
     "UniformDiscreteDistribution",
     # predefined continuous distributions
@@ -194,6 +196,55 @@ class Distribution(abc.ABC):
      
     def __rpow__(self, other: Union[Numeric, Self]) -> Self:
         raise NotImplementedError("Exponentiation is currently not implemented for distributions.")
+    
+    def __lt__(self, other: Union[Numeric, Self]) -> Event:        
+        if isinstance(other, (int, float)):
+            return Event(self, portion.open(-np.inf, other))
+        elif isinstance(other, Distribution):
+            return self - other < 0
+        else:
+            raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
+    
+    def __le__(self, other: Union[Numeric, Self]) -> Event:
+        if isinstance(other, (int, float)):
+            return Event(self, portion.openclosed(-np.inf, other))
+        elif isinstance(other, Distribution):
+            return self - other <= 0
+        else:
+            raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
+    
+    def __gt__(self, other: Union[Numeric, Self]) -> Event:
+            
+        if isinstance(other, (int, float)):
+            return Event(self, portion.open(other, np.inf))
+        elif isinstance(other, Distribution):
+            return self - other > 0
+        else:
+            raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
+    
+    def __ge__(self, other: Union[Numeric, Self]) -> Event:
+        if isinstance(other, (int, float)):
+            return Event(self, portion.closedopen(other, np.inf))
+        elif isinstance(other, Distribution):
+            return self - other >= 0
+        else:
+            raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
+    
+    def __ne__(self, other: Union[Numeric, Self]) -> Event:
+        if isinstance(other, (int, float)):
+            return Event(self, portion.open(-np.inf, other) | portion.open(other, np.inf))
+        elif isinstance(other, Distribution):
+            return self - other != 0
+        else:
+            raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
+    
+    def __eq__(self, other: Union[Numeric, Self]) -> Event:
+        if isinstance(other, (int, float)):
+            return Event(self, portion.singleton(other))
+        elif isinstance(other, Distribution):
+            return self - other == 0
+        else:
+            raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
 class FormulaVariable(object):
     """A formula-like that supports formula writing."""
@@ -590,6 +641,47 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
         self.median = self._dist.median()
         self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
         self.standard_deviation = self._dist.std()
+        
+class Event(object):
+    """An event described by a distribution and interval."""
+    
+    _last = None
+    
+    def __init__(self, tdist: Distribution, interval: portion.Interval):
+        """Create an event object."""
+        self._tdist = tdist
+        self._interval = interval
+        
+    def __bool__(self) -> bool:
+        if Event._last is None:
+            Event._last = self._interval
+        return True
+    
+def P(evt: Event) -> float:
+    """Return the probability of an event occuring."""
+    probability = 0
+    if Event._last is not None:
+        evt._interval = evt._interval & Event._last
+        Event._last = None
+        
+    for atomic in evt._interval._intervals:
+        if atomic.lower > atomic.upper:
+            continue
+        elif atomic.lower == atomic.upper:
+            probability += evt._tdist.probability_at(atomic.lower)
+            continue
+        
+        if isinstance(evt._tdist, ContinuousDistribution):
+            probability += evt._tdist.probability_between(atomic.lower, atomic.upper)
+        elif isinstance(evt._tdist, DiscreteDistribution):
+            lower = atomic.lower
+            if atomic.left == portion.OPEN:
+                lower += 1
+            upper = atomic.upper
+            if atomic.right == portion.OPEN:
+                upper -= 1
+            probability += evt._tdist.probability_between(lower, upper)
+    return probability
     
 class UniformDiscreteDistribution(DiscreteDistribution):
     """A uniform discrete distribution."""

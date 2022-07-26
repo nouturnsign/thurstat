@@ -6,6 +6,15 @@ from thurstat import *
 
 warnings.filterwarnings("ignore")
 
+N = UniformDiscreteDistribution(a=1, b=6)
+print(P(N == 3))
+print(P(N != 3))
+
+O = UniformContinuousDistribution(a=0, b=1)
+print(P(0.25 < O))
+print(P(O > 0.5))
+print(P(0.25 < O < 0.5))
+
 Q = UniformContinuousDistribution(a=0, b=20)
 Q.discretize().display("pmf")
 
