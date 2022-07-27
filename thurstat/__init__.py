@@ -348,8 +348,10 @@ class formula(object):
         """Convert func to a formula."""
         self.func = func
         
-    def __call__(self, other: _Union[FormulaVariable, Distribution]) -> _Union[FormulaVariable, Distribution]:
-        if isinstance(other, FormulaVariable):
+    def __call__(self, other: _Union[Numeric, FormulaVariable, Distribution]) -> _Union[Numeric, FormulaVariable, Distribution]:
+        if isinstance(other, (int, float)):
+            return self.func(other)
+        elif isinstance(other, FormulaVariable):
             return FormulaVariable(lambda x: self.func(other(x)))
         elif isinstance(other, Distribution):
             return other.apply_func(self.func)
