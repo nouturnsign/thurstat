@@ -45,7 +45,7 @@ class pfunc(NamedTuple):
     PPF: str = "ppf"
     ISF: str = "isf"
 
-config = {
+DEFAULTS = {
     "infinity_approximation": 1e6,
     "exact": False,
     "ratio": 200,
@@ -55,14 +55,14 @@ config = {
     "warnings": "default",
 }
 
-def update_config(**kwargs):
-    """Update the global config."""
+def update_defaults(**kwargs):
+    """Update the global defaults."""
     
-    config.update(kwargs)
+    DEFAULTS.update(kwargs)
     if "global_seed" in kwargs:
-        config["global_seed"] = np.random.RandomState(np.random.MT19937(np.random.SeedSequence(kwargs["global_seed"])))
+        DEFAULTS["global_seed"] = np.random.RandomState(np.random.MT19937(np.random.SeedSequence(kwargs["global_seed"])))
     if "warnings" in kwargs:
-        warnings.filterwarnings(config["warnings"])
+        warnings.filterwarnings(DEFAULTS["warnings"])
 
 class ParameterValidationError(Exception):
     """Raised when an invalid set of parameters are used to instantiate a Distribution."""
@@ -137,10 +137,10 @@ class Distribution(abc.ABC):
     
     def generate_random_values(self, n: int) -> np.ndarray:
         """Generate n random values."""
-        if config["local_seed"] is not None:
-            seed = config["local_seed"]
+        if DEFAULTS["local_seed"] is not None:
+            seed = DEFAULTS["local_seed"]
         else:
-            seed = config["global_seed"]
+            seed = DEFAULTS["global_seed"]
         return self._dist.rvs(n, random_state=seed)
     
     def evaluate(self, pfunc: ProbabilityFunction, at: float) -> float:
@@ -394,7 +394,7 @@ class DiscreteDistribution(Distribution):
         a0, b0 = self.support.lower, self.support.upper
         
         if (infinity_approximation is None) and (a is None) and (b is None):
-            infinity_approximation = config["infinity_approximation"]
+            infinity_approximation = DEFAULTS["infinity_approximation"]
         
         if infinity_approximation is not None:
             if a0 == -np.inf:
@@ -441,14 +441,14 @@ class DiscreteDistribution(Distribution):
         """
         a, b = self.support.lower, self.support.upper
         if a == -np.inf:
-            a = self.evaluate("ppf", 1 / config["infinity_approximation"])
+            a = self.evaluate("ppf", 1 / DEFAULTS["infinity_approximation"])
         if b == np.inf:
-            b = self.evaluate("ppf", 1 - 1 / config["infinity_approximation"])
+            b = self.evaluate("ppf", 1 - 1 / DEFAULTS["infinity_approximation"])
         x = np.arange(a, b + 1)
         y = self.evaluate(pfunc, x)
         markerline, stemlines, baseline = plt.stem(x, y, basefmt=" ", use_line_collection=True, **kwargs)
         if color is None:
-            color = config["default_color"]
+            color = DEFAULTS["default_color"]
         markerline.set_color(color)
         stemlines.set_color(color)
         if not add:
@@ -486,14 +486,14 @@ class DiscreteDistribution(Distribution):
         elif isinstance(other, DiscreteDistribution):
             a0, b0 = self.support.lower, self.support.upper
             if a0 == -np.inf:
-                a0 = -config["infinity_approximation"]
+                a0 = -DEFAULTS["infinity_approximation"]
             if b0 == np.inf:
-                b0 = config["infinity_approximation"]
+                b0 = DEFAULTS["infinity_approximation"]
             a1, b1 = other.support.lower, other.support.upper
             if a1 == -np.inf:
-                a1 = -config["infinity_approximation"]
+                a1 = -DEFAULTS["infinity_approximation"]
             if b1 == np.inf:
-                b1 = config["infinity_approximation"]
+                b1 = DEFAULTS["infinity_approximation"]
             a, b = np.arange(a0, b0 + 1), np.arange(a1, b1 + 1)
             pmf = {}
             for x, y in np.nditer(np.array(np.meshgrid(a, b)), flags=['external_loop'], order='F'):
@@ -551,7 +551,7 @@ class ContinuousDistribution(Distribution):
             raise NotImplementedError("Multiple branched inverse functions not implemented yet. Use 1 to 1 functions.")
         
         if (infinity_approximation is None) and (a is None) and (b is None):
-            infinity_approximation = config["infinity_approximation"]
+            infinity_approximation = DEFAULTS["infinity_approximation"]
         
         if infinity_approximation is not None:
             if a0 == -np.inf:
@@ -589,15 +589,15 @@ class ContinuousDistribution(Distribution):
         """
         a, b = self.support.lower, self.support.upper
         if a == -np.inf:
-            a = self.evaluate("ppf", 1 / config["infinity_approximation"])
+            a = self.evaluate("ppf", 1 / DEFAULTS["infinity_approximation"])
         if b == np.inf:
-            b = self.evaluate("ppf", 1 - 1 / config["infinity_approximation"])
+            b = self.evaluate("ppf", 1 - 1 / DEFAULTS["infinity_approximation"])
         diff = b - a
         buffer = 0.2
-        x = np.linspace(a - diff * buffer, b + diff * buffer, int(diff * config["ratio"]))
+        x = np.linspace(a - diff * buffer, b + diff * buffer, int(diff * DEFAULTS["ratio"]))
         y = self.evaluate(pfunc, x)
         if color is None:
-            color = config["default_color"]
+            color = DEFAULTS["default_color"]
         lines = plt.plot(x, y, color=color)
         if not add:
             plt.show()
@@ -638,23 +638,23 @@ class ContinuousDistribution(Distribution):
         elif isinstance(other, ContinuousDistribution):
             a0, b0 = self.support.lower, self.support.upper
             if a0 == -np.inf:
-                a0 = -config["infinity_approximation"]
+                a0 = -DEFAULTS["infinity_approximation"]
             if b0 == np.inf:
-                b0 = config["infinity_approximation"]
+                b0 = DEFAULTS["infinity_approximation"]
             a1, b1 = other.support.lower, other.support.upper
             if a1 == -np.inf:
-                a1 = -config["infinity_approximation"]
+                a1 = -DEFAULTS["infinity_approximation"]
             if b1 == np.inf:
-                b1 = config["infinity_approximation"]
+                b1 = DEFAULTS["infinity_approximation"]
             values = op(a0, a1), op(a0, b1), op(b0, a0), op(b0, b1)
             a2, b2 = min(values), max(values)
             
-            exact_pdf = lambda z: quad_vec(lambda x: other.evaluate("pdf", inv_op(z, x)) * self.evaluate("pdf", x) * abs(1 if op != operator.mul and op != operator.truediv else inv_op(1, x + 1 / config["infinity_approximation"])), a=-np.inf, b=np.inf)[0]
-            if config["exact"]:
+            exact_pdf = lambda z: quad_vec(lambda x: other.evaluate("pdf", inv_op(z, x)) * self.evaluate("pdf", x) * abs(1 if op != operator.mul and op != operator.truediv else inv_op(1, x + 1 / DEFAULTS["infinity_approximation"])), a=-np.inf, b=np.inf)[0]
+            if DEFAULTS["exact"]:
                 return self.from_pfunc("pdf", exact_pdf, a2, b2) 
             
             diff = b2 - a2
-            x = np.linspace(a2, b2, int(diff) * config["ratio"])
+            x = np.linspace(a2, b2, int(diff) * DEFAULTS["ratio"])
             
             approximate_pdf = exact_pdf(x)          
             @np.vectorize
