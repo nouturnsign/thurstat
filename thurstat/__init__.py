@@ -778,9 +778,18 @@ class UniformContinuousDistribution(ContinuousDistribution):
         return _stats.uniform(loc, scale)
     
 class CauchyDistribution(ContinuousDistribution):
-    """A standardized Cauchy distribution."""
+    """A Cauchy distribution."""
     
-    options = []
+    options = [
+        ["x0", "gamma"],
+        ["loc", "scale"],
+    ]
     
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.cauchy]:
-        return _stats.cauchy()
+        if "x0" in parameters and "gamma" in parameters:
+            loc = parameters.pop("x0")
+            scale = parameters.pop("gamma")
+        elif "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        return _stats.cauchy(loc, scale)

@@ -4,7 +4,7 @@ from thurstat import *
 
 update_defaults(warnings="ignore", infinity_approximation=1e3)
 
-M = CauchyDistribution()
+M = CauchyDistribution(x0=0, gamma=1)
 M.display("pdf")
 
 N = BinomialDistribution(n=10, p=0.2)
