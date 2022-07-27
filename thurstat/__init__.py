@@ -772,7 +772,7 @@ class UniformContinuousDistribution(ContinuousDistribution):
         if "a" in parameters and "b" in parameters:
             loc = parameters.pop("a")
             scale = parameters.pop("b") - loc
-        if "loc" in parameters and "scale" in parameters:
+        elif "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
         return _stats.uniform(loc, scale)
