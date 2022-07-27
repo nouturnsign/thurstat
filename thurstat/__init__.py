@@ -389,8 +389,6 @@ class DiscreteDistribution(Distribution):
         ----------
         func: NumericFunction
             The function to apply to the distribution.
-        *inverse_funcs: NumericFunction
-            The branches of the inverse of `func`. Currently, multiple branches are not implemented.
         infinity_approximation: Optional[float], default=None
             What value to use as an approximation for infinity when the original distribution's support is unbounded and the new distribution's support is not explicitly defined.
         a, b: Optional[float], default=None
