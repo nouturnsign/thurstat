@@ -1,19 +1,27 @@
-from __future__ import annotations
+from __future__ import annotations as _annotations
 
-import abc
-import operator
-import warnings
-from types import BuiltinFunctionType
-from typing import Callable, Dict, List, NamedTuple, Optional, Type, Union
-from typing_extensions import Literal, Self
+import abc as _abc
+import operator as _operator
+import warnings as _warnings
+from types import BuiltinFunctionType as _BuiltinFunctionType
+from typing import (
+    Callable as _Callable, 
+    Dict as _Dict, 
+    List as _List, 
+    NamedTuple as _NamedTuple, 
+    Optional as _Optional, 
+    Type as _Type, 
+    Union as _Union
+)
+from typing_extensions import Literal as _Literal, Self as _Self
 
-import matplotlib.pyplot as plt
-import numpy as np
-import portion
-import scipy.stats
-from scipy.integrate import quad_vec
-from scipy.interpolate import interp1d
-from scipy.optimize import brentq, minimize_scalar
+import matplotlib.pyplot as _plt
+import numpy as _np
+import portion as _portion
+import scipy.stats as _stats
+from scipy.integrate import quad_vec as _quad_vec
+from scipy.interpolate import interp1d as _interp1d
+from scipy.optimize import brentq as brentq, minimize_scalar as _minimize_scalar
 
 __all__ = [
     # global
@@ -32,11 +40,11 @@ __all__ = [
     "UniformContinuousDistribution",
 ]
 
-Numeric = Union[int, float]
-NumericFunction = Callable[[Numeric], Numeric]
-ProbabilityFunction = Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"]
+Numeric = _Union[int, float]
+NumericFunction = _Callable[[Numeric], Numeric]
+ProbabilityFunction = _Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"]
 
-class pfunc(NamedTuple):
+class pfunc(_NamedTuple):
     """Acceptable pfunc abbreviations."""
     PDF: str = "pdf"
     PMF: str = "pmf"
@@ -60,24 +68,24 @@ def update_defaults(**kwargs):
     
     DEFAULTS.update(kwargs)
     if "global_seed" in kwargs:
-        DEFAULTS["global_seed"] = np.random.RandomState(np.random.MT19937(np.random.SeedSequence(kwargs["global_seed"])))
+        DEFAULTS["global_seed"] = _np.random.RandomState(_np.random.MT19937(_np.random.SeedSequence(kwargs["global_seed"])))
     if "warnings" in kwargs:
-        warnings.filterwarnings(DEFAULTS["warnings"])
+        _warnings.filterwarnings(DEFAULTS["warnings"])
 
 class ParameterValidationError(Exception):
     """Raised when an invalid set of parameters are used to instantiate a Distribution."""
     
-    def __init__(self, given: List[str], options: Optional[List[List[str]]]=None):
+    def __init__(self, given: _List[str], options: _Optional[_List[_List[str]]]=None):
         """Create the error with the given parameters and optional parameters."""
         message = f"Failed to validate parameters. Given: {given}."
         if options is not None:
             message += f" Options: {options}."
         super().__init__(message)
 
-class Distribution(abc.ABC):
+class Distribution(_abc.ABC):
     """The base class for a distribution. Do not instantiate this class."""
     
-    options: Optional[List[List[str]]]
+    options: _Optional[_List[_List[str]]]
     
     def __init__(self, **parameters: float) -> None:
         """Create a distribution object given the parameters as named keyword arguments."""
@@ -89,14 +97,14 @@ class Distribution(abc.ABC):
         if len(parameters) > 0:
             raise ParameterValidationError(given, self.options)
     
-    @abc.abstractmethod  
-    def interpret_parameterization(self, parameters: Dict[str, float]) -> Union[scipy.stats.rv_continuous, scipy.stats.rv_discrete, None]:
+    @_abc.abstractmethod  
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
         pass
     
     @property
     def support(self):
         if not hasattr(self, "_support"):
-            self._support = portion.closed(*self._dist.support())
+            self._support = _portion.closed(*self._dist.support())
         return self._support
     
     @property
@@ -135,7 +143,7 @@ class Distribution(abc.ABC):
             self._standard_deviation = self._dist.std()
         return self._standard_deviation
     
-    def generate_random_values(self, n: int) -> np.ndarray:
+    def generate_random_values(self, n: int) -> _np.ndarray:
         """Generate n random values."""
         if DEFAULTS["local_seed"] is not None:
             seed = DEFAULTS["local_seed"]
@@ -161,7 +169,7 @@ class Distribution(abc.ABC):
         """
         return getattr(self._dist, pfunc)(at)
     
-    def expected_value(self, func: Optional[NumericFunction]=None) -> float:
+    def expected_value(self, func: _Optional[NumericFunction]=None) -> float:
         """
         Get the expected value of a function on the distribution.
         
@@ -181,108 +189,108 @@ class Distribution(abc.ABC):
         """Return the nth moment."""
         return self._dist.moment(n)
     
-    @abc.abstractmethod
+    @_abc.abstractmethod
     def probability_between(self, a: float, b: float) -> float:
         pass
     
-    @abc.abstractmethod
+    @_abc.abstractmethod
     def probability_at(self, a: float) -> float:
         pass
     
-    @abc.abstractmethod
-    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> Union["CustomDiscreteDistribution", "CustomContinuousDistribution"]:
+    @_abc.abstractmethod
+    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> _Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
         pass
     
-    @abc.abstractmethod
-    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: Optional[str]=None, **kwargs) -> None:
+    @_abc.abstractmethod
+    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _Optional[str]=None, **kwargs) -> None:
         pass
     
     @classmethod
-    @abc.abstractmethod
-    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Numeric, b: Numeric) -> Type[Self]:
+    @_abc.abstractmethod
+    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Numeric, b: Numeric) -> _Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
         pass
     
-    @abc.abstractmethod
-    def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType) -> Self:
+    @_abc.abstractmethod
+    def apply_infix_operator(self, other: _Union[Numeric, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
         pass
     
-    def __add__(self, other: Union[Numeric, Self]) -> Self: 
-        return self.apply_infix_operator(other, operator.add, operator.sub)
+    def __add__(self, other: _Union[Numeric, _Self]) -> _Self: 
+        return self.apply_infix_operator(other, _operator.add, _operator.sub)
 
-    def __radd__(self, other: Union[Numeric, Self]) -> Self: 
+    def __radd__(self, other: _Union[Numeric, _Self]) -> _Self: 
         return self + other
     
-    def __sub__(self, other: Union[Numeric, Self]) -> Self:
-        return self.apply_infix_operator(other, operator.sub, operator.add)
+    def __sub__(self, other: _Union[Numeric, _Self]) -> _Self:
+        return self.apply_infix_operator(other, _operator.sub, _operator.add)
     
-    def __rsub__(self, other: Union[Numeric, Self]) -> Self:
+    def __rsub__(self, other: _Union[Numeric, _Self]) -> _Self:
         return -(self - other)
     
-    def __mul__(self, other: Union[Numeric, Self]) -> Self: 
-        return self.apply_infix_operator(other, operator.mul, operator.truediv)
+    def __mul__(self, other: _Union[Numeric, _Self]) -> _Self: 
+        return self.apply_infix_operator(other, _operator.mul, _operator.truediv)
     
-    def __rmul__(self, other: Union[Numeric, Self]) -> Self: 
+    def __rmul__(self, other: _Union[Numeric, _Self]) -> _Self: 
         return self * other
     
-    def __neg__(self) -> Self:
+    def __neg__(self) -> _Self:
         return self * -1
     
-    def __truediv__(self, other: Union[Numeric, Self]) -> Self:
+    def __truediv__(self, other: _Union[Numeric, _Self]) -> _Self:
         raise NotImplementedError("Division is currently not implemented for distributions.")
     
-    def __rtruediv__(self, other: Union[Numeric, Self]) -> Self:
+    def __rtruediv__(self, other: _Union[Numeric, _Self]) -> _Self:
         raise other * self ** -1
     
-    def __pow__(self, other: Union[Numeric, Self]) -> Self:
+    def __pow__(self, other: _Union[Numeric, _Self]) -> _Self:
         raise NotImplementedError("Exponentiation is currently not implemented for distributions.")
      
-    def __rpow__(self, other: Union[Numeric, Self]) -> Self:
+    def __rpow__(self, other: _Union[Numeric, _Self]) -> _Self:
         raise NotImplementedError("Exponentiation is currently not implemented for distributions.")
     
-    def __lt__(self, other: Union[Numeric, Self]) -> Event:        
+    def __lt__(self, other: _Union[Numeric, _Self]) -> Event:        
         if isinstance(other, (int, float)):
-            return Event(self, portion.open(-np.inf, other))
+            return Event(self, _portion.open(-_np.inf, other))
         elif isinstance(other, Distribution):
             return self - other < 0
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __le__(self, other: Union[Numeric, Self]) -> Event:
+    def __le__(self, other: _Union[Numeric, _Self]) -> Event:
         if isinstance(other, (int, float)):
-            return Event(self, portion.openclosed(-np.inf, other))
+            return Event(self, _portion.openclosed(-_np.inf, other))
         elif isinstance(other, Distribution):
             return self - other <= 0
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __gt__(self, other: Union[Numeric, Self]) -> Event:
+    def __gt__(self, other: _Union[Numeric, _Self]) -> Event:
             
         if isinstance(other, (int, float)):
-            return Event(self, portion.open(other, np.inf))
+            return Event(self, _portion.open(other, _np.inf))
         elif isinstance(other, Distribution):
             return self - other > 0
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __ge__(self, other: Union[Numeric, Self]) -> Event:
+    def __ge__(self, other: _Union[Numeric, _Self]) -> Event:
         if isinstance(other, (int, float)):
-            return Event(self, portion.closedopen(other, np.inf))
+            return Event(self, _portion.closedopen(other, _np.inf))
         elif isinstance(other, Distribution):
             return self - other >= 0
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __ne__(self, other: Union[Numeric, Self]) -> Event:
+    def __ne__(self, other: _Union[Numeric, _Self]) -> Event:
         if isinstance(other, (int, float)):
-            return Event(self, portion.open(-np.inf, other) | portion.open(other, np.inf))
+            return Event(self, _portion.open(-_np.inf, other) | _portion.open(other, _np.inf))
         elif isinstance(other, Distribution):
             return self - other != 0
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __eq__(self, other: Union[Numeric, Self]) -> Event:
+    def __eq__(self, other: _Union[Numeric, _Self]) -> Event:
         if isinstance(other, (int, float)):
-            return Event(self, portion.singleton(other))
+            return Event(self, _portion.singleton(other))
         elif isinstance(other, Distribution):
             return self - other == 0
         else:
@@ -291,46 +299,46 @@ class Distribution(abc.ABC):
 class FormulaVariable(object):
     """A formula-like that supports formula writing."""
     
-    def __init__(self, func: Optional[NumericFunction]=None) -> None:
+    def __init__(self, func: _Optional[NumericFunction]=None) -> None:
         """Create a formula variable, optionally with a func. Defaults to the identity function."""
         if func is None:
             func = lambda x: x
         self.func = func
            
-    def __call__(self, other: Self) -> NumericFunction:
+    def __call__(self, other: _Self) -> NumericFunction:
         return self.func(other)
     
-    def __add__(self, other: Numeric) -> Self: 
+    def __add__(self, other: Numeric) -> _Self: 
         return FormulaVariable(lambda x: self.func(x) + other)
     
-    def __radd__(self, other: Numeric) -> Self: 
+    def __radd__(self, other: Numeric) -> _Self: 
         return self + other
     
-    def __sub__(self, other: Numeric) -> Self:
+    def __sub__(self, other: Numeric) -> _Self:
         return FormulaVariable(lambda x: self.func(x) - other) 
     
-    def __rsub__(self, other: Numeric) -> Self:
+    def __rsub__(self, other: Numeric) -> _Self:
         return FormulaVariable(lambda x: other - self.func(x)) 
     
-    def __mul__(self, other: Numeric) -> Self: 
+    def __mul__(self, other: Numeric) -> _Self: 
         return FormulaVariable(lambda x: self.func(x) * other)
     
-    def __rmul__(self, other: Numeric) -> Self: 
+    def __rmul__(self, other: Numeric) -> _Self: 
         return self * other
     
-    def __neg__(self) -> Self:
+    def __neg__(self) -> _Self:
         return self * -1
     
-    def __truediv__(self, other: Numeric) -> Self:
+    def __truediv__(self, other: Numeric) -> _Self:
         return FormulaVariable(lambda x: self.func(x) / other)
     
-    def __rtruediv__(self, other: Numeric) -> Self:
+    def __rtruediv__(self, other: Numeric) -> _Self:
         return FormulaVariable(lambda x: other / self.func(x))
     
-    def __pow__(self, other: Numeric) -> Self:
+    def __pow__(self, other: Numeric) -> _Self:
         return FormulaVariable(lambda x: self.func(x) ** other)
         
-    def __rpow__(self, other: Numeric) -> Self:
+    def __rpow__(self, other: Numeric) -> _Self:
         return FormulaVariable(lambda x: other ** self.func(x))
     
 class formula(object):
@@ -340,7 +348,7 @@ class formula(object):
         """Convert func to a formula."""
         self.func = func
         
-    def __call__(self, other: Union[FormulaVariable, Distribution]) -> Union[FormulaVariable, Distribution]:
+    def __call__(self, other: _Union[FormulaVariable, Distribution]) -> _Union[FormulaVariable, Distribution]:
         if isinstance(other, FormulaVariable):
             return FormulaVariable(lambda x: self.func(other(x)))
         elif isinstance(other, Distribution):
@@ -353,8 +361,8 @@ class CustomDistribution(Distribution):
     
     options = None
     
-    @abc.abstractmethod
-    def __init__(self, dist: Union[scipy.stats.rv_discrete, scipy.stats.rv_continuous]) -> None:
+    @_abc.abstractmethod
+    def __init__(self, dist: _Union[_stats.rv_discrete, _stats.rv_continuous]) -> None:
         self._dist = dist
         
     def interpret_parameterization(self) -> None:
@@ -371,7 +379,7 @@ class DiscreteDistribution(Distribution):
         """Calculate the probability P(X == a)."""
         return self.evaluate("pmf", a)
     
-    def apply_func(self, func: NumericFunction, *, infinity_approximation: Optional[int]=None, a: Optional[int]=None, b: Optional[int]=None) -> CustomDiscreteDistribution:
+    def apply_func(self, func: NumericFunction, *, infinity_approximation: _Optional[int]=None, a: _Optional[int]=None, b: _Optional[int]=None) -> CustomDiscreteDistribution:
         """
         Apply a function to the distribution to create a new distribution.
         
@@ -397,9 +405,9 @@ class DiscreteDistribution(Distribution):
             infinity_approximation = DEFAULTS["infinity_approximation"]
         
         if infinity_approximation is not None:
-            if a0 == -np.inf:
+            if a0 == -_np.inf:
                 a0 = -infinity_approximation
-            if b0 == np.inf:
+            if b0 == _np.inf:
                 b0 = infinity_approximation
                 
         if a is None:
@@ -407,7 +415,7 @@ class DiscreteDistribution(Distribution):
         if b is None:
             b = b0
                 
-        x = np.arange(a, b + 1)
+        x = _np.arange(a, b + 1)
         y = self.evaluate("pmf", x)
         
         x_transform = func(x)
@@ -418,9 +426,9 @@ class DiscreteDistribution(Distribution):
         a = min(x_transform)
         b = max(x_transform)
         
-        return self.from_pfunc("pmf", np.vectorize(lambda a: pmf.get(a, 0)), a, b)
+        return self.from_pfunc("pmf", _np.vectorize(lambda a: pmf.get(a, 0)), a, b)
     
-    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: Optional[str]=None, **kwargs) -> None:
+    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _Optional[str]=None, **kwargs) -> None:
         """
         Display a probability function.
         
@@ -440,19 +448,19 @@ class DiscreteDistribution(Distribution):
         None
         """
         a, b = self.support.lower, self.support.upper
-        if a == -np.inf:
+        if a == -_np.inf:
             a = self.evaluate("ppf", 1 / DEFAULTS["infinity_approximation"])
-        if b == np.inf:
+        if b == _np.inf:
             b = self.evaluate("ppf", 1 - 1 / DEFAULTS["infinity_approximation"])
-        x = np.arange(a, b + 1)
+        x = _np.arange(a, b + 1)
         y = self.evaluate(pfunc, x)
-        markerline, stemlines, baseline = plt.stem(x, y, basefmt=" ", use_line_collection=True, **kwargs)
+        markerline, stemlines, baseline = _plt.stem(x, y, basefmt=" ", use_line_collection=True, **kwargs)
         if color is None:
             color = DEFAULTS["default_color"]
         markerline.set_color(color)
         stemlines.set_color(color)
         if not add:
-            plt.show()
+            _plt.show()
     
     @classmethod    
     def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Numeric, b: Numeric) -> CustomDiscreteDistribution:
@@ -473,11 +481,11 @@ class DiscreteDistribution(Distribution):
         CustomDiscreteDistribution
             The new distribution.
         """
-        class NewScipyDiscreteDistribution(scipy.stats.rv_discrete): pass
+        class NewScipyDiscreteDistribution(_stats.rv_discrete): pass
         setattr(NewScipyDiscreteDistribution, "_" + pfunc, staticmethod(func))
         return CustomDiscreteDistribution(NewScipyDiscreteDistribution(a=a, b=b))
 
-    def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType = None) -> Self:
+    def apply_infix_operator(self, other: _Union[Numeric, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType = None) -> _Self:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
@@ -485,28 +493,28 @@ class DiscreteDistribution(Distribution):
             return self.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
         elif isinstance(other, DiscreteDistribution):
             a0, b0 = self.support.lower, self.support.upper
-            if a0 == -np.inf:
+            if a0 == -_np.inf:
                 a0 = -DEFAULTS["infinity_approximation"]
-            if b0 == np.inf:
+            if b0 == _np.inf:
                 b0 = DEFAULTS["infinity_approximation"]
             a1, b1 = other.support.lower, other.support.upper
-            if a1 == -np.inf:
+            if a1 == -_np.inf:
                 a1 = -DEFAULTS["infinity_approximation"]
-            if b1 == np.inf:
+            if b1 == _np.inf:
                 b1 = DEFAULTS["infinity_approximation"]
-            a, b = np.arange(a0, b0 + 1), np.arange(a1, b1 + 1)
+            a, b = _np.arange(a0, b0 + 1), _np.arange(a1, b1 + 1)
             pmf = {}
-            for x, y in np.nditer(np.array(np.meshgrid(a, b)), flags=['external_loop'], order='F'):
+            for x, y in _np.nditer(_np.array(_np.meshgrid(a, b)), flags=['external_loop'], order='F'):
                 pmf[op(x, y)] = pmf.get(op(x, y), 0) + self.evaluate("pmf", x) * other.evaluate("pmf", y)
             a2, b2 = min(pmf.keys()), max(pmf.keys())
-            return self.from_pfunc("pmf", np.vectorize(lambda a: pmf.get(a, 0)), a2, b2)
+            return self.from_pfunc("pmf", _np.vectorize(lambda a: pmf.get(a, 0)), a2, b2)
         else:
             raise NotImplementedError(f"Binary operation between objects of type {type(self)} and {type(other)} is currently undefined.")
     
 class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
     """A custom discrete distribution."""
     
-    def __init__(self, dist: scipy.stats.rv_discrete) -> None:
+    def __init__(self, dist: _stats.rv_discrete) -> None:
         """Create a `CustomDiscreteDistribution` object given a `scipy.stats.rv_discrete` object."""
         self._dist = dist
     
@@ -522,7 +530,7 @@ class ContinuousDistribution(Distribution):
         _warnings.warn("Trying to calculate the point probability in a discrete distribution.")
         return 0
     
-    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: Optional[float]=None, a: Optional[float]=None, b: Optional[float]=None) -> CustomContinuousDistribution:
+    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: _Optional[float]=None, a: _Optional[float]=None, b: _Optional[float]=None) -> CustomContinuousDistribution:
         """
         Apply a function to the distribution to create a new distribution.
         
@@ -545,7 +553,7 @@ class ContinuousDistribution(Distribution):
         a0, b0 = self.support.lower, self.support.upper
         
         if len(inverse_funcs) == 0:
-            inverse_func = np.vectorize(lambda y: brentq(lambda x: func(x) - y, a=a0, b=b0))
+            inverse_func = _np.vectorize(lambda y: brentq(lambda x: func(x) - y, a=a0, b=b0))
         elif len(inverse_funcs) == 1:
             inverse_func = inverse_funcs[0]
         else:
@@ -555,21 +563,21 @@ class ContinuousDistribution(Distribution):
             infinity_approximation = DEFAULTS["infinity_approximation"]
         
         if infinity_approximation is not None:
-            if a0 == -np.inf:
+            if a0 == -_np.inf:
                 a0 = -infinity_approximation
-            if b0 == np.inf:
+            if b0 == _np.inf:
                 b0 = infinity_approximation
 
         if a is None: 
-            result = minimize_scalar(func, bounds=(a0, b0), method="bounded")
+            result = _minimize_scalar(func, bounds=(a0, b0), method="bounded")
             a = func(result.x)
         if b is None:
-            result = minimize_scalar(lambda x: -func(x), bounds=(a0, b0), method="bounded")
+            result = _minimize_scalar(lambda x: -func(x), bounds=(a0, b0), method="bounded")
             b = func(result.x)
             
         return self.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
     
-    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: Optional[str]=None, **kwargs) -> None:
+    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _Optional[str]=None, **kwargs) -> None:
         """
         Display a probability function.
         
@@ -589,19 +597,19 @@ class ContinuousDistribution(Distribution):
         None
         """
         a, b = self.support.lower, self.support.upper
-        if a == -np.inf:
+        if a == -_np.inf:
             a = self.evaluate("ppf", 1 / DEFAULTS["infinity_approximation"])
-        if b == np.inf:
+        if b == _np.inf:
             b = self.evaluate("ppf", 1 - 1 / DEFAULTS["infinity_approximation"])
         diff = b - a
         buffer = 0.2
-        x = np.linspace(a - diff * buffer, b + diff * buffer, int(diff * DEFAULTS["ratio"]))
+        x = _np.linspace(a - diff * buffer, b + diff * buffer, int(diff * DEFAULTS["ratio"]))
         y = self.evaluate(pfunc, x)
         if color is None:
             color = DEFAULTS["default_color"]
-        lines = plt.plot(x, y, color=color)
+        lines = _plt.plot(x, y, color=color)
         if not add:
-            plt.show()
+            _plt.show()
     
     @classmethod    
     def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> CustomContinuousDistribution:
@@ -622,7 +630,7 @@ class ContinuousDistribution(Distribution):
         CustomContinuousDistribution
             The new distribution.
         """
-        class NewScipyContinuousDistribution(scipy.stats.rv_continuous): pass
+        class NewScipyContinuousDistribution(_stats.rv_continuous): pass
         setattr(NewScipyContinuousDistribution, "_" + pfunc, staticmethod(func))
         return CustomContinuousDistribution(NewScipyContinuousDistribution(a=a, b=b))
     
@@ -630,7 +638,7 @@ class ContinuousDistribution(Distribution):
         """Approximate the continuous distribution with a discrete distribution."""
         return DiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
     
-    def apply_infix_operator(self, other: Union[Numeric, Self], op: BuiltinFunctionType, inv_op: BuiltinFunctionType) -> Self:
+    def apply_infix_operator(self, other: _Union[Numeric, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
@@ -638,33 +646,33 @@ class ContinuousDistribution(Distribution):
             return self.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
         elif isinstance(other, ContinuousDistribution):
             a0, b0 = self.support.lower, self.support.upper
-            if a0 == -np.inf:
+            if a0 == -_np.inf:
                 a0 = -DEFAULTS["infinity_approximation"]
-            if b0 == np.inf:
+            if b0 == _np.inf:
                 b0 = DEFAULTS["infinity_approximation"]
             a1, b1 = other.support.lower, other.support.upper
-            if a1 == -np.inf:
+            if a1 == -_np.inf:
                 a1 = -DEFAULTS["infinity_approximation"]
-            if b1 == np.inf:
+            if b1 == _np.inf:
                 b1 = DEFAULTS["infinity_approximation"]
             values = op(a0, a1), op(a0, b1), op(b0, a0), op(b0, b1)
             a2, b2 = min(values), max(values)
             
-            exact_pdf = lambda z: quad_vec(lambda x: other.evaluate("pdf", inv_op(z, x)) * self.evaluate("pdf", x) * abs(1 if op != operator.mul and op != operator.truediv else inv_op(1, x + 1 / DEFAULTS["infinity_approximation"])), a=-np.inf, b=np.inf)[0]
+            exact_pdf = lambda z: _quad_vec(lambda x: other.evaluate("pdf", inv_op(z, x)) * self.evaluate("pdf", x) * abs(1 if op != _operator.mul and op != _operator.truediv else inv_op(1, x + 1 / DEFAULTS["infinity_approximation"])), a=-_np.inf, b=_np.inf)[0]
             if DEFAULTS["exact"]:
                 return self.from_pfunc("pdf", exact_pdf, a2, b2) 
             
             diff = b2 - a2
-            x = np.linspace(a2, b2, int(diff) * DEFAULTS["ratio"])
+            x = _np.linspace(a2, b2, int(diff) * DEFAULTS["ratio"])
             
             approximate_pdf = exact_pdf(x)          
-            @np.vectorize
+            @_np.vectorize
             def approximate_cdf(z):
-                i = np.searchsorted(x, z, side="right")
-                res = np.trapz(approximate_pdf[:i], x[:i])
+                i = _np.searchsorted(x, z, side="right")
+                res = _np.trapz(approximate_pdf[:i], x[:i])
                 return res
             y = approximate_cdf(x)
-            cdf = interp1d(x[:-1], y[:-1], bounds_error=False, fill_value=(0, 1), assume_sorted=True)
+            cdf = _interp1d(x[:-1], y[:-1], bounds_error=False, fill_value=(0, 1), assume_sorted=True)
             
             return self.from_pfunc("cdf", cdf, a2, b2)
         else:
@@ -673,7 +681,7 @@ class ContinuousDistribution(Distribution):
 class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     """A custom custom distribution."""
 
-    def __init__(self, dist: scipy.stats.rv_continuous) -> None:
+    def __init__(self, dist: _stats.rv_continuous) -> None:
         """Create a `CustomContinuousDistribution` object given a `scipy.stats.rv_continuous` object."""
         self._dist = dist
         
@@ -682,7 +690,7 @@ class Event(object):
     
     _last = None
     
-    def __init__(self, tdist: Distribution, interval: portion.Interval):
+    def __init__(self, tdist: Distribution, interval: _portion.Interval):
         """Create an event object."""
         self._tdist = tdist
         self._interval = interval
@@ -710,10 +718,10 @@ def P(evt: Event) -> float:
             probability += evt._tdist.probability_between(atomic.lower, atomic.upper)
         elif isinstance(evt._tdist, DiscreteDistribution):
             lower = atomic.lower
-            if atomic.left == portion.OPEN:
+            if atomic.left == _portion.OPEN:
                 lower += 1
             upper = atomic.upper
-            if atomic.right == portion.OPEN:
+            if atomic.right == _portion.OPEN:
                 upper -= 1
             probability += evt._tdist.probability_between(lower, upper)
     return probability
@@ -726,14 +734,14 @@ class UniformDiscreteDistribution(DiscreteDistribution):
         ["low", "high"],
     ]
     
-    def interpret_parameterization(self, parameters: Dict[str, float]) -> Type[scipy.stats.randint]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.randint]:
         if "a" in parameters and "b" in parameters:
             low = parameters.pop("a")
             high = parameters.pop("b") + 1
         elif "low" in parameters and "high" in parameters:
             low = parameters.pop("low")
             high = parameters.pop("high")
-        return scipy.stats.randint(low, high)
+        return _stats.randint(low, high)
     
 class BinomialDistribution(DiscreteDistribution):
     """A binomial distribution."""
@@ -743,14 +751,14 @@ class BinomialDistribution(DiscreteDistribution):
         ["n", "q"],
     ]
     
-    def interpret_parameterization(self, parameters: Dict[str, float]) -> Union[scipy.stats.rv_continuous, scipy.stats.rv_discrete, None]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
         if "n" in parameters:
             n = parameters.pop("n")
             if "p" in parameters:
                 p = parameters.pop("p")
             elif "q" in parameters:
                 p = 1 - parameters.pop("q")
-        return scipy.stats.binom(n, p)
+        return _stats.binom(n, p)
     
 class UniformContinuousDistribution(ContinuousDistribution):
     """A uniform continuous distribution."""
@@ -760,11 +768,11 @@ class UniformContinuousDistribution(ContinuousDistribution):
         ["loc", "scale"],
     ]
     
-    def interpret_parameterization(self, parameters: Dict[str, float]) -> Type[scipy.stats.uniform]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.uniform]:
         if "a" in parameters and "b" in parameters:
             loc = parameters.pop("a")
             scale = parameters.pop("b") - loc
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
-        return scipy.stats.uniform(loc, scale)
+        return _stats.uniform(loc, scale)
