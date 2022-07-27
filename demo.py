@@ -4,6 +4,16 @@ from thurstat import *
 
 update_defaults(warnings="ignore", infinity_approximation=1e3)
 
+k = FormulaVariable()
+x = FormulaVariable()
+
+@formula
+def absolute(x):
+    return np.abs(x)
+
+K = UniformContinuousDistribution(a=-1, b=1).apply_func(absolute, x, -x)
+K.display("pdf")
+
 M = CauchyDistribution(x0=0, gamma=1)
 M.display("pdf")
 
@@ -36,7 +46,6 @@ W.display("pmf")
 def exp(x):
     return np.exp(x)
 
-x = FormulaVariable()
 X = (
     ContinuousDistribution
     .from_pfunc("cdf", -1 / (exp(x) + 1) + 1, a=-np.inf, b=np.inf)

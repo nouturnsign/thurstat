@@ -19,6 +19,7 @@ import matplotlib.pyplot as _plt
 import numpy as _np
 import portion as _portion
 import scipy.stats as _stats
+from scipy.misc import derivative as _derivative
 from scipy.integrate import quad_vec as _quad_vec
 from scipy.interpolate import interp1d as _interp1d
 from scipy.optimize import brentq as brentq, minimize_scalar as _minimize_scalar
@@ -552,13 +553,6 @@ class ContinuousDistribution(Distribution):
         """
         a0, b0 = self.support.lower, self.support.upper
         
-        if len(inverse_funcs) == 0:
-            inverse_func = _np.vectorize(lambda y: brentq(lambda x: func(x) - y, a=a0, b=b0))
-        elif len(inverse_funcs) == 1:
-            inverse_func = inverse_funcs[0]
-        else:
-            raise NotImplementedError("Multiple branched inverse functions not implemented yet. Use 1 to 1 functions.")
-        
         if (infinity_approximation is None) and (a is None) and (b is None):
             infinity_approximation = DEFAULTS["infinity_approximation"]
         
@@ -574,8 +568,16 @@ class ContinuousDistribution(Distribution):
         if b is None:
             result = _minimize_scalar(lambda x: -func(x), bounds=(a0, b0), method="bounded")
             b = func(result.x)
-            
-        return self.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
+        
+        if len(inverse_funcs) == 0:
+            inverse_func = _np.vectorize(lambda y: brentq(lambda x: func(x) - y, a=a0, b=b0))
+            return self.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
+        elif len(inverse_funcs) == 1:
+            inverse_func = inverse_funcs[0]
+            return self.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
+        else:
+            _warnings.warn("Multiple branched inverse functions are currently questionably implemented. Use 1 to 1 functions when possible.")
+            return self.from_pfunc("pdf", lambda y: sum(self.evaluate("pdf", inverse_func(y)) * _np.absolute(_derivative(inverse_func, y, dx=1 / infinity_approximation)) for inverse_func in inverse_funcs), a=a, b=b)
     
     def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _Optional[str]=None, **kwargs) -> None:
         """
