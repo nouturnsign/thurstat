@@ -519,6 +519,7 @@ class ContinuousDistribution(Distribution):
     
     def probability_at(self, a: float) -> float:
         """Calculate the probability P(X == a). Always returns 0."""
+        _warnings.warn("Trying to calculate the point probability in a discrete distribution.")
         return 0
     
     def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: Optional[float]=None, a: Optional[float]=None, b: Optional[float]=None) -> CustomContinuousDistribution:
