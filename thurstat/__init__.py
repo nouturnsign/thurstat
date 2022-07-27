@@ -211,6 +211,11 @@ class Distribution(_abc.ABC):
     def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: Numeric, b: Numeric) -> _Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
         pass
     
+    @classmethod
+    @_abc.abstractmethod
+    def from_dist(cls, dist: _Union[_stats.rv_discrete, _stats.rv_continuous]) -> CustomDistribution:
+        pass
+    
     @_abc.abstractmethod
     def apply_infix_operator(self, other: _Union[Numeric, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
         pass
@@ -484,7 +489,11 @@ class DiscreteDistribution(Distribution):
         """
         class NewScipyDiscreteDistribution(_stats.rv_discrete): pass
         setattr(NewScipyDiscreteDistribution, "_" + pfunc, staticmethod(func))
-        return CustomDiscreteDistribution(NewScipyDiscreteDistribution(a=a, b=b))
+        return cls.from_dist(NewScipyDiscreteDistribution(a=a, b=b))
+    
+    @classmethod
+    def from_dist(cls, dist: _stats.rv_discrete) -> CustomDiscreteDistribution:
+        return CustomDiscreteDistribution(dist)
 
     def apply_infix_operator(self, other: _Union[Numeric, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType = None) -> _Self:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
@@ -634,7 +643,11 @@ class ContinuousDistribution(Distribution):
         """
         class NewScipyContinuousDistribution(_stats.rv_continuous): pass
         setattr(NewScipyContinuousDistribution, "_" + pfunc, staticmethod(func))
-        return CustomContinuousDistribution(NewScipyContinuousDistribution(a=a, b=b))
+        return cls.from_dist(NewScipyContinuousDistribution(a=a, b=b))
+    
+    @classmethod
+    def from_dist(cls, dist: _stats.rv_continuous) -> CustomContinuousDistribution:
+        return CustomContinuousDistribution(dist)
     
     def discretize(self) -> DiscreteDistribution:
         """Approximate the continuous distribution with a discrete distribution."""
