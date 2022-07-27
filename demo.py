@@ -2,7 +2,10 @@ import numpy as np
 
 from thurstat import *
 
-update_defaults(warnings="ignore")
+update_defaults(warnings="ignore", infinity_approximation=1e3)
+
+M = CauchyDistribution()
+M.display("pdf")
 
 N = BinomialDistribution(n=10, p=0.2)
 print(P(N == 3))

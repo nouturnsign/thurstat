@@ -37,7 +37,7 @@ __all__ = [
     # predefined discrete distributions
     "UniformDiscreteDistribution", "BinomialDistribution",
     # predefined continuous distributions
-    "UniformContinuousDistribution",
+    "UniformContinuousDistribution", "CauchyDistribution",
 ]
 
 Numeric = _Union[int, float]
@@ -776,3 +776,11 @@ class UniformContinuousDistribution(ContinuousDistribution):
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
         return _stats.uniform(loc, scale)
+    
+class CauchyDistribution(ContinuousDistribution):
+    """A standardized Cauchy distribution."""
+    
+    options = []
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.cauchy]:
+        return _stats.cauchy()
