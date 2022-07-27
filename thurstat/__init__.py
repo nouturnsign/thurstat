@@ -84,14 +84,52 @@ class Distribution(abc.ABC):
             raise ParameterValidationError(given, self.options)
         if len(parameters) > 0:
             raise ParameterValidationError(given, self.options)
-        self.support = portion.closed(*self._dist.support())
-        self.median = self._dist.median()
-        self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
-        self.standard_deviation = self._dist.std()
     
     @abc.abstractmethod  
     def interpret_parameterization(self, parameters: Dict[str, float]) -> Union[scipy.stats.rv_continuous, scipy.stats.rv_discrete, None]:
         pass
+    
+    @property
+    def support(self):
+        if not hasattr(self, "_support"):
+            self._support = portion.closed(*self._dist.support())
+        return self._support
+    
+    @property
+    def median(self):
+        if not hasattr(self, "_median"):
+            self._median = self._dist.median()
+        return self._median
+    
+    @property
+    def mean(self):
+        if not hasattr(self, "_mean"):
+            self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
+        return self._mean
+    
+    @property
+    def variance(self):
+        if not hasattr(self, "_variance"):
+            self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
+        return self._variance
+    
+    @property
+    def skewness(self):
+        if not hasattr(self, "_skewness"):
+            self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
+        return self._skewness
+    
+    @property
+    def kurtosis(self):
+        if not hasattr(self, "_kurtosis"):
+            self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
+        return self._kurtosis
+    
+    @property
+    def standard_deviation(self):
+        if not hasattr(self, "_standard_deviation"):
+            self._standard_deviation = self._dist.std()
+        return self._standard_deviation
     
     def generate_random_values(self, n: int) -> np.ndarray:
         """Generate n random values."""
@@ -467,10 +505,6 @@ class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
     def __init__(self, dist: scipy.stats.rv_discrete) -> None:
         """Create a `CustomDiscreteDistribution` object given a `scipy.stats.rv_discrete` object."""
         self._dist = dist
-        self.support = portion.closed(*self._dist.support())
-        self.median = self._dist.median()
-        self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
-        self.standard_deviation = self._dist.std()
     
 class ContinuousDistribution(Distribution):
     """The base class for continuous distributions. Do not instantiate this class."""
@@ -637,10 +671,6 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     def __init__(self, dist: scipy.stats.rv_continuous) -> None:
         """Create a `CustomContinuousDistribution` object given a `scipy.stats.rv_continuous` object."""
         self._dist = dist
-        self.support = portion.closed(*self._dist.support())
-        self.median = self._dist.median()
-        self.mean, self.variance, self.skewness, self.kurtosis = self._dist.stats(moments="mvsk")
-        self.standard_deviation = self._dist.std()
         
 class Event(object):
     """An event described by a distribution and interval."""
