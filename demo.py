@@ -1,10 +1,8 @@
-import warnings
-
 import numpy as np
 
 from thurstat import *
 
-warnings.filterwarnings("ignore")
+update_config(warnings="ignore")
 
 N = BinomialDistribution(n=10, p=0.2)
 print(P(N == 3))

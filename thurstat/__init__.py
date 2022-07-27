@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import operator
+import warnings
 from types import BuiltinFunctionType
 from typing import Callable, Dict, List, NamedTuple, Optional, Type, Union
 from typing_extensions import Literal, Self
@@ -51,6 +52,7 @@ config = {
     "default_color": "C0",
     "local_seed": None,
     "global_seed": None,
+    "warnings": "default",
 }
 
 def update_config(**kwargs):
@@ -59,6 +61,8 @@ def update_config(**kwargs):
     config.update(kwargs)
     if "global_seed" in kwargs:
         config["global_seed"] = np.random.RandomState(np.random.MT19937(np.random.SeedSequence(kwargs["global_seed"])))
+    if "warnings" in kwargs:
+        warnings.filterwarnings(config["warnings"])
 
 class ParameterValidationError(Exception):
     """Raised when an invalid set of parameters are used to instantiate a Distribution."""
