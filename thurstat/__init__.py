@@ -45,7 +45,7 @@ NumericFunction = _Callable[[Numeric], Numeric]
 ProbabilityFunction = _Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"]
 
 class pfunc(_NamedTuple):
-    """Acceptable pfunc abbreviations."""
+    """Acceptable probability function abbreviations."""
     PDF: str = "pdf"
     PMF: str = "pmf"
     CDF: str = "cdf"
@@ -297,7 +297,7 @@ class Distribution(_abc.ABC):
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
 class FormulaVariable(object):
-    """A formula-like that supports formula writing."""
+    """A formula-like variable that can be passed as a function."""
     
     def __init__(self, func: _Optional[NumericFunction]=None) -> None:
         """Create a formula variable, optionally with a func. Defaults to the identity function."""
@@ -342,7 +342,7 @@ class FormulaVariable(object):
         return FormulaVariable(lambda x: other ** self.func(x))
     
 class formula(object):
-    """Decorator for converting functions to formulas."""
+    """Decorator for converting functions to formulas. Formulas can be applied to numbers, formula variables, and distributions."""
     
     def __init__(self, func: NumericFunction) -> None:
         """Convert func to a formula."""
@@ -527,7 +527,7 @@ class ContinuousDistribution(Distribution):
     
     def probability_at(self, a: float) -> float:
         """Calculate the probability P(X == a). Always returns 0."""
-        _warnings.warn("Trying to calculate the point probability in a discrete distribution.")
+        _warnings.warn("Trying to calculate the point probability of a continuous distribution.")
         return 0
     
     def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: _Optional[float]=None, a: _Optional[float]=None, b: _Optional[float]=None) -> CustomContinuousDistribution:
@@ -701,7 +701,7 @@ class Event(object):
         return True
     
 def P(evt: Event) -> float:
-    """Return the probability of an event occuring."""
+    """Return the probability of an event."""
     probability = 0
     if Event._last is not None:
         evt._interval = evt._interval & Event._last
