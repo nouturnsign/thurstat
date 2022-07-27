@@ -14,6 +14,9 @@ def absolute(x):
 K = UniformContinuousDistribution(a=-1, b=1).apply_func(absolute, x, -x)
 K.display("pdf")
 
+L = (UniformContinuousDistribution(a=0, b=1) - UniformContinuousDistribution(a=0, b=1)).apply_func(absolute, x, -x)
+L.display("cdf")
+
 M = CauchyDistribution(x0=0, gamma=1)
 M.display("pdf")
 
