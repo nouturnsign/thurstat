@@ -7,6 +7,10 @@ update_defaults(warnings="ignore", infinity_approximation=1e3)
 k = FormulaVariable()
 x = FormulaVariable()
 
+B = BinomialDistribution.to_alias("n", "p")
+C = B(10, 0.2)
+C.display("pmf")
+
 @formula
 def absolute(x):
     return np.abs(x)

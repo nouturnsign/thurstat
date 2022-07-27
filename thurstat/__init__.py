@@ -190,6 +190,10 @@ class Distribution(_abc.ABC):
         """Return the nth moment."""
         return self._dist.moment(n)
     
+    @classmethod
+    def to_alias(cls, *interpret_parameters: str) -> Alias:
+        return Alias(cls, *interpret_parameters)
+    
     @_abc.abstractmethod
     def probability_between(self, a: float, b: float) -> float:
         pass
@@ -699,6 +703,18 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     def __init__(self, dist: _stats.rv_continuous) -> None:
         """Create a `CustomContinuousDistribution` object given a `scipy.stats.rv_continuous` object."""
         self._dist = dist
+        
+class Alias(object):
+    """An alias for a distribution given the parameter convention."""
+    
+    def __init__(self, tdist: _Type[Distribution], *interpret_parameters: str) -> None:
+        """Create an alias given the class of distribution and parameter names in the order they will be passed."""
+        self._tdist = tdist
+        self.interpret_parameters = interpret_parameters
+        
+    def __call__(self, *value_parameters: Numeric) -> _Type[Distribution]:
+        """Return a distribution interpreted by the alias."""
+        return self._tdist(**{k: v for k, v in zip(self.interpret_parameters, value_parameters)})
         
 class Event(object):
     """An event described by a distribution and interval."""
