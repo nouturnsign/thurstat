@@ -2,7 +2,7 @@ import numpy as np
 
 from thurstat import *
 
-update_config(warnings="ignore")
+update_defaults(warnings="ignore")
 
 N = BinomialDistribution(n=10, p=0.2)
 print(P(N == 3))

@@ -17,7 +17,7 @@ from scipy.optimize import brentq, minimize_scalar
 
 __all__ = [
     # global
-    "pfunc", "update_config",
+    "pfunc", "update_defaults",
     # formula
     "FormulaVariable", "formula",
     # base classes
