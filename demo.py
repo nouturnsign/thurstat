@@ -6,9 +6,10 @@ from thurstat import *
 
 warnings.filterwarnings("ignore")
 
-N = UniformDiscreteDistribution(a=1, b=6)
+N = BinomialDistribution(n=10, p=0.2)
 print(P(N == 3))
 print(P(N != 3))
+N.display("pmf")
 
 O = UniformContinuousDistribution(a=0, b=1)
 print(P(0.25 < O))

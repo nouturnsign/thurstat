@@ -26,7 +26,7 @@ __all__ = [
     # events and probability
     "P",
     # predefined discrete distributions
-    "UniformDiscreteDistribution",
+    "UniformDiscreteDistribution", "BinomialDistribution",
     # predefined continuous distributions
     "UniformContinuousDistribution",
 ]
@@ -729,6 +729,23 @@ class UniformDiscreteDistribution(DiscreteDistribution):
             low = parameters.pop("low")
             high = parameters.pop("high")
         return scipy.stats.randint(low, high)
+    
+class BinomialDistribution(DiscreteDistribution):
+    """A binomial distribution."""
+    
+    options = [
+        ["n", "p"],
+        ["n", "q"],
+    ]
+    
+    def interpret_parameterization(self, parameters: Dict[str, float]) -> Union[scipy.stats.rv_continuous, scipy.stats.rv_discrete, None]:
+        if "n" in parameters:
+            n = parameters.pop("n")
+            if "p" in parameters:
+                p = parameters.pop("p")
+            elif "q" in parameters:
+                p = 1 - parameters.pop("q")
+        return scipy.stats.binom(n, p)
     
 class UniformContinuousDistribution(ContinuousDistribution):
     """A uniform continuous distribution."""
