@@ -751,7 +751,7 @@ class BinomialDistribution(DiscreteDistribution):
         ["n", "q"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _stats.rv_discrete:
         if "n" in parameters:
             n = parameters.pop("n")
             if "p" in parameters:
