@@ -56,7 +56,9 @@ To get probability functions, use `pfunc` with dot accessor. e.g. `pfunc.PDF`. A
 
 ### Creating distribution objects
 
-Use common names for parameters; all parameters must be named. Any parameters that are keywords (e.g. lambda) should be appended with an underscore (e.g. lambda_). If the parameters are invalid, a `ParameterValidationError` will be raised, and should display acceptable options. When in doubt, consult `scipy.stats` or Wikipedia. When creating a new distribution, each distribution is assumed to be independent. 
+When creating a new distribution, each distribution is assumed to be independent. 
+
+Use common names for parameters; all parameters must be named. Any parameters that are keywords (e.g. lambda) should be appended with an underscore (e.g. lambda_). Any parameters with subscripts (x_0) should be input without an underscore in between the variable name and subscript (e.g. x0). Parameters with superscripts (e.g. sigma^2) are not accepted; other names in place of these superscript parameters should be (e.g. variance). If the parameters are invalid, a `ParameterValidationError` will be raised, and should display acceptable options. When in doubt, consult `scipy.stats` or Wikipedia. 
 
 ### Useful attributes
 
