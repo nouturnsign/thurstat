@@ -252,14 +252,17 @@ class Distribution(_abc.ABC):
         raise NotImplementedError("Division is currently not implemented for distributions.")
     
     def __pow__(self, other: _Union[_Numeric, _Self]) -> _Self:
-        if isinstance(other, int) and other >= 0:
-            return self.apply_func(lambda x: x ** other)
-        raise NotImplementedError("Exponentiation is currently not implemented between distributions or for non-integer or negative powers.")
+        if isinstance(other, int) and other > 0:
+            if other % 2 == 0:
+                return self.apply_func(lambda x: x ** other, lambda x: x ** (1 / other), lambda x: - (x ** (1 / other)))
+            else:
+                return self.apply_func(lambda x: x ** other, lambda x: x ** (1 / other))
+        raise NotImplementedError("Exponentiation is currently not implemented between distributions or for non-integer or non-positive powers.")
      
     def __rpow__(self, other: _Union[_Numeric, _Self]) -> _Self:
-        if isinstance(other, int) and other >= 0:
-            return self.apply_func(lambda x: other ** x)
-        raise NotImplementedError("Exponentiation is currently not implemented between distributions or for non-integer or negative bases.")
+        if isinstance(other, int) and other > 0:
+            return self.apply_func(lambda x: other ** x, lambda x: _np.log(x) / _np.log(other))
+        raise NotImplementedError("Exponentiation is currently not implemented between distributions or for non-integer or non-positive bases.")
     
     def __lt__(self, other: _Union[_Numeric, _Self]) -> Event:        
         if isinstance(other, (int, float)):
