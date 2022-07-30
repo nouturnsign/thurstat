@@ -94,16 +94,47 @@ discretize() # ContinuousDistribution only
 
 ```
 to_alias(*interpret_parameters)
+from_pfunc(pfunc, func, a, b)
 from_dist(dist)
 ```
 
 ### Custom distributions
 
-Use the classmethod `from_pfunc` with the type of desired distribution.
+Use the classmethod `from_pfunc` or `from_dist` with the type of desired distribution. When using `from_dist`, input a `scipy.rv_...` object. 
+
+Alternatively, create a new class inheriting from the desired type of distribution and implement method `interpret_parameters` to return a `scipy.rv_...` object. This allows for creating a general class of distribution with acceptable parameters instead of a new custom distribution every time the parameters are changed.
 
 e.g.
 ```py
-X = ContinuousDistribution.from_pfunc("pdf", lambda x: 1.5 * x ** 0.5, a=0, b=1)
+# from_pfunc
+from numpy import pi
+X = ContinuousDistribution.from_pfunc("pdf", lambda x: 1 / (pi * (1 + x ** 2)), a=0, b=1)
+
+# from_dist
+X = ContinuousDistribution.from_dist(scipy.stats.cauchy())
+
+# inheritance
+import scipy.stats
+
+class CauchyDistribution(ContinuousDistribution):
+    """A Cauchy distribution."""
+    
+    # optionally define options as a list of acceptable parameter names; used in ParameterValidationError
+    options = [
+        ["x0", "gamma"],
+        ["loc", "scale"],
+    ]
+    
+    # implement this method
+    # pop parameters and assign to values for parameter validation
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> scipy.stats.rv_continuous:
+        if "x0" in parameters and "gamma" in parameters:
+            loc = parameters.pop("x0")
+            scale = parameters.pop("gamma")
+        elif "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        return scipy.stats.cauchy(loc, scale)
 ```
 
 ### Apply function
