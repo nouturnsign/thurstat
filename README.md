@@ -4,6 +4,8 @@ thurstat is a WIP easy-to-use univariate probability distribution module, mainly
 
 ## Installation
 
+Python >= 3.7, specifically with Google Colab usage in mind.
+
 ```bash
 pip install git+https://bitbucket.org/nouturnsign/thurstat
 ```
