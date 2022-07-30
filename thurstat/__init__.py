@@ -774,6 +774,21 @@ class UniformDiscreteDistribution(DiscreteDistribution):
             high = parameters.pop("high")
         return _stats.randint(low, high)
     
+class BernoulliDistribution(DiscreteDistribution):
+    """A Bernoulli distribution."""
+    
+    options = [
+        ["p"],
+        ["q"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.bernoulli]:
+        if "p" in parameters:
+            p = parameters.pop("p")
+        elif "q" in parameters:
+            p = 1 - parameters.pop("q")
+        return _stats.bernoulli(p)
+    
 class BinomialDistribution(DiscreteDistribution):
     """A binomial distribution."""
     
@@ -790,6 +805,152 @@ class BinomialDistribution(DiscreteDistribution):
             elif "q" in parameters:
                 p = 1 - parameters.pop("q")
         return _stats.binom(n, p)
+    
+class GeometricDistribution(DiscreteDistribution):
+    """A geometric distribution."""
+    
+    options = [
+        ["p"],
+        ["q"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.geom]:
+        if "p" in parameters:
+            p = parameters.pop("p")
+        elif "q" in parameters:
+            p = 1 - parameters.pop("q")
+        return _stats.geom(p)
+    
+class HypergeometricDistribution(DiscreteDistribution):
+    """A hypergeometric distribution."""
+    
+    options = [
+        ["M", "n", "N"],
+        ["N", "K", "n"],
+        ["N", "m", "n"],
+        ["N", "N1", "n"],
+        ["N1", "N2", "n"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.hypergeom]:
+        if "M" in parameters and "n" in parameters and "N" in parameters:
+            M = parameters.pop("M")
+            n = parameters.pop("n")
+            N = parameters.pop("N")
+        elif "n" in parameters:
+            N = parameters.pop("n")
+            if "N1" in parameters:
+                n = parameters.pop("N1")
+                if "N" in parameters:
+                    M = parameters.pop("N")
+                elif "N2" in parameters:
+                    M = n + parameters.pop("N2")
+            elif "N" in parameters:
+                M = parameters.pop("N")
+                if "K" in parameters:
+                    n = parameters.pop("K")
+                elif "n" in parameters:
+                    n = parameters.pop("m")
+        return _stats.hypergeom(M, n, N)
+    
+class NegativeBinomialDistribution(DiscreteDistribution):
+    """A negative binomial distribution."""
+    
+    options = [
+        ["n", "p"],
+        ["n", "q"],
+        ["r", "p"],
+        ["r", "q"],
+        ["mu", "sigma"],
+        ["mean", "variance"],
+        ["mu", "n"],
+        ["mu", "r"],
+        ["mu", "alpha"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.nbinom]:
+        if "mean" in parameters and "variance" in parameters:
+            mean = parameters.pop("mean")
+            variance = parameters.pop("variance")
+            p = mean / variance
+            n = mean ** 2 / (variance - mean)
+        elif "mu" in parameters:
+            mu = parameters.pop("mu")
+            if "n" in parameters:
+                n = parameters.pop("n")
+                p = n / (n + mu)
+            elif "sigma" in parameters:
+                sigma = parameters.pop("sigma")
+                p = mu / sigma ** 2
+                n = mu ** 2 / (sigma ** 2 - mu)
+            elif "r" in parameters:
+                n = parameters.pop("r")
+                p = n / (mu + n)
+            elif "alpha" in parameters:
+                n = int(1 / parameters.pop("alpha"))
+                p = n / (mu + n)
+        elif "n" in parameters:
+            n = parameters.pop("n")
+            if "p" in parameters:
+                p = parameters.pop("p")
+            elif "q" in parameters:
+                p = 1 - parameters.pop("q")
+        elif "r" in parameters:
+            n = parameters.pop("r")
+            if "p" in parameters:
+                p = parameters.pop("p")
+            elif "q" in parameters:
+                p = 1 - parameters.pop("q")
+        return _stats.nbinom(n, p)
+    
+class NegativeHypergeometricDistribution(DiscreteDistribution):
+    """A negative hypergeometric distribution."""
+    
+    options = [
+        ["M", "n", "r"],
+        ["N", "K", "r"],
+        ["N", "m", "r"],
+        ["N", "N1", "r"],
+        ["N1", "N2", "r"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.nhypergeom]:
+        if "r" in parameters:
+            r = parameters.pop("r")
+            if "M" in parameters and "n" in parameters:
+                M = parameters.pop("M")
+                n = parameters.pop("n")
+            elif "N1" in parameters:
+                n = parameters.pop("N1")
+                if "N" in parameters:
+                    M = parameters.pop("N")
+                elif "N2" in parameters:
+                    M = n + parameters.pop("N2")
+            elif "N" in parameters:
+                M = parameters.pop("N")
+                if "K" in parameters:
+                    n = parameters.pop("K")
+                elif "n" in parameters:
+                    n = parameters.pop("m")
+        return _stats.nhypergeom(M, n, r)
+    
+class PoissonDistribution(DiscreteDistribution):
+    """A Poisson distribution."""
+    
+    options = [
+        ["mu"],
+        ["lambda_"],
+        ["r", "t"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.poisson]:
+        if "mu" in parameters:
+            mu = parameters.pop("mu")
+        elif "lambda_" in parameters:
+            mu = parameters.pop("lambda_")
+        elif "r" in parameters and "t" in parameters:
+            mu = parameters.pop("r") * parameters.pop("t")
+        return _stats.poisson(mu)
     
 class UniformContinuousDistribution(ContinuousDistribution):
     """A uniform continuous distribution."""
