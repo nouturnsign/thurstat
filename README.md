@@ -182,11 +182,6 @@ print(P(0.2 < X < 0.4))
 
 For convenience, some defaults are assumed to be good values but can be changed using `update_defaults`. Namely, the following defaults can be changed:
 
-e.g.
-```py
-update_defaults(warnings="ignore", infinity_approximation=1e3)
-```
-
 - infinity_approximation: large enough to be considered a finite infinity, defaults to `1e6`
 - exact: whether or not to use approximations in continuous random variable arithmetic, defaults to `False`
 - ratio: the ratio of points plotted to distance between endpoints when displaying, defaults to `200`
@@ -196,6 +191,11 @@ update_defaults(warnings="ignore", infinity_approximation=1e3)
 - warnings: the warning level to be displayed according to Python's `warning` module, defaults to `default`
 
 As an example for the seeds, setting local seed will mean that calling `generate_random_values` on the same distribution will result in the same sequence of values. Setting global seed will mean that calling `generate_random_values` on the same distribution will start from the same sequence of values but keep progressing through the seed.
+
+e.g.
+```py
+update_defaults(warnings="ignore", infinity_approximation=1e3)
+```
 
 ## Future goals
 
