@@ -36,7 +36,7 @@ __all__ = [
     # events and probability
     "P",
     # predefined discrete distributions
-    "UniformDiscreteDistribution", "BinomialDistribution",
+    "UniformDiscreteDistribution", "BinomialDistribution", "BernoulliDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution",
     # predefined continuous distributions
     "UniformContinuousDistribution", "CauchyDistribution",
 ]
