@@ -201,10 +201,12 @@ update_defaults(warnings="ignore", infinity_approximation=1e3)
 
 - apply division and exponentiation (integer only powers when distribution is the base) on distributions
 - create dependent distributions
-- Event boolean arithmetic
+- event boolean arithmetic
+- add tests
 - improve accuracy of approximations for continuous random variable arithmetic
 - implement multivariate distributions
 - more distributions
+- implement model fitting
 
 ## License
 
