@@ -163,7 +163,7 @@ X = B(10, 0.2)
 
 ### Events and probability
 
-A function `P` is defined for probability-like notation. Comparisons for `Distribution` objects are implemented to return `Event` objects. Avoid using the Event constructor.
+A function `P` is defined for probability-like notation. `P` aliases the function `probability_of` in case `P` is already defined as a constant. Comparisons for `Distribution` objects are implemented to return `Event` objects. Avoid using the Event constructor.
 
 e.g.
 ```py

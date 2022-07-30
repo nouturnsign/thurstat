@@ -34,7 +34,7 @@ __all__ = [
     # instantiable equivalents of the base classes
     "CustomDistribution", "CustomDiscreteDistribution", "CustomContinuousDistribution",
     # events and probability
-    "P",
+    "P", "probability_of",
     # predefined discrete distributions
     "UniformDiscreteDistribution", "BinomialDistribution", "BernoulliDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution",
     # predefined continuous distributions
@@ -731,7 +731,7 @@ class Event(object):
             Event._last = self._interval
         return True
     
-def P(evt: Event) -> float:
+def probability_of(evt: Event) -> float:
     """Return the probability of an event."""
     probability = 0
     if Event._last is not None:
@@ -756,6 +756,10 @@ def P(evt: Event) -> float:
                 upper -= 1
             probability += evt._tdist.probability_between(lower, upper)
     return probability
+    
+def P(evt: Event) -> float:
+    """Return the probability of an event."""
+    return probability_of(evt)
     
 class UniformDiscreteDistribution(DiscreteDistribution):
     """A uniform discrete distribution."""
