@@ -38,7 +38,7 @@ __all__ = [
     # predefined discrete distributions
     "UniformDiscreteDistribution", "BinomialDistribution", "BernoulliDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution",
     # predefined continuous distributions
-    "UniformContinuousDistribution", "CauchyDistribution",
+    "UniformContinuousDistribution", "CauchyDistribution", "CosineDistribution", "ChiDistribution",
 ]
 
 _Numeric = _Union[int, float]
@@ -996,3 +996,29 @@ class CauchyDistribution(ContinuousDistribution):
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
         return _stats.cauchy(loc, scale)
+    
+class CosineDistribution(ContinuousDistribution):
+    """A cosine approximation to the normal distribution"""
+    options = [
+        ["loc","scale"]
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.cosine]:
+        if "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        return _stats.cosine(loc,scale)
+
+class ChiDistribution(ContinuousDistribution):
+    """A Chi distribution"""
+    
+    options = [
+        ["k"],
+        ["df"],
+    ]
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.chi]:
+        if "df" in parameters:
+            df = parameters.pop("df")
+        elif "k" in parameters:
+            df = parameters.pop("k")
+        return _stats.cosine(df)
