@@ -998,7 +998,8 @@ class CauchyDistribution(ContinuousDistribution):
         return _stats.cauchy(loc, scale)
     
 class CosineDistribution(ContinuousDistribution):
-    """A cosine approximation to the normal distribution"""
+    """A cosine approximation to the normal distribution."""
+    
     options = [
         ["loc", "scale"]
     ]
@@ -1010,7 +1011,7 @@ class CosineDistribution(ContinuousDistribution):
         return _stats.cosine(loc,scale)
 
 class ChiDistribution(ContinuousDistribution):
-    """A Chi distribution"""
+    """A chi distribution."""
     
     options = [
         ["k"],
