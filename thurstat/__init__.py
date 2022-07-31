@@ -1000,7 +1000,7 @@ class CauchyDistribution(ContinuousDistribution):
 class CosineDistribution(ContinuousDistribution):
     """A cosine approximation to the normal distribution"""
     options = [
-        ["loc","scale"]
+        ["loc", "scale"]
     ]
     
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.cosine]:
@@ -1016,9 +1016,10 @@ class ChiDistribution(ContinuousDistribution):
         ["k"],
         ["df"],
     ]
+    
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.chi]:
         if "df" in parameters:
             df = parameters.pop("df")
         elif "k" in parameters:
             df = parameters.pop("k")
-        return _stats.cosine(df)
+        return _stats.chi(df)
