@@ -36,9 +36,9 @@ __all__ = [
     # events and probability
     "P", "probability_of",
     # predefined discrete distributions
-    "UniformDiscreteDistribution", "BinomialDistribution", "BernoulliDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution",
+    "BinomialDistribution", "BernoulliDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution", "UniformDiscreteDistribution",
     # predefined continuous distributions
-    "UniformContinuousDistribution", "CauchyDistribution", "CosineDistribution", "ChiDistribution",
+    "CauchyDistribution", "CosineDistribution", "ChiDistribution", "UniformContinuousDistribution",
 ]
 
 _Numeric = _Union[int, float]
@@ -768,23 +768,6 @@ def P(evt: Event) -> float:
     """Return the probability of an event."""
     return probability_of(evt)
     
-class UniformDiscreteDistribution(DiscreteDistribution):
-    """A uniform discrete distribution."""
-    
-    options = [
-        ["a", "b"], 
-        ["low", "high"],
-    ]
-    
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.randint]:
-        if "a" in parameters and "b" in parameters:
-            low = parameters.pop("a")
-            high = parameters.pop("b") + 1
-        elif "low" in parameters and "high" in parameters:
-            low = parameters.pop("low")
-            high = parameters.pop("high")
-        return _stats.randint(low, high)
-    
 class BernoulliDistribution(DiscreteDistribution):
     """A Bernoulli distribution."""
     
@@ -963,22 +946,22 @@ class PoissonDistribution(DiscreteDistribution):
             mu = parameters.pop("r") * parameters.pop("t")
         return _stats.poisson(mu)
     
-class UniformContinuousDistribution(ContinuousDistribution):
-    """A uniform continuous distribution."""
+class UniformDiscreteDistribution(DiscreteDistribution):
+    """A uniform discrete distribution."""
     
     options = [
         ["a", "b"], 
-        ["loc", "scale"],
+        ["low", "high"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.uniform]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.randint]:
         if "a" in parameters and "b" in parameters:
-            loc = parameters.pop("a")
-            scale = parameters.pop("b") - loc
-        elif "loc" in parameters and "scale" in parameters:
-            loc = parameters.pop("loc")
-            scale = parameters.pop("scale")
-        return _stats.uniform(loc, scale)
+            low = parameters.pop("a")
+            high = parameters.pop("b") + 1
+        elif "low" in parameters and "high" in parameters:
+            low = parameters.pop("low")
+            high = parameters.pop("high")
+        return _stats.randint(low, high)
     
 class CauchyDistribution(ContinuousDistribution):
     """A Cauchy distribution."""
@@ -996,19 +979,6 @@ class CauchyDistribution(ContinuousDistribution):
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
         return _stats.cauchy(loc, scale)
-    
-class CosineDistribution(ContinuousDistribution):
-    """A cosine approximation to the normal distribution."""
-    
-    options = [
-        ["loc", "scale"]
-    ]
-    
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.cosine]:
-        if "loc" in parameters and "scale" in parameters:
-            loc = parameters.pop("loc")
-            scale = parameters.pop("scale")
-        return _stats.cosine(loc,scale)
 
 class ChiDistribution(ContinuousDistribution):
     """A chi distribution."""
@@ -1024,3 +994,48 @@ class ChiDistribution(ContinuousDistribution):
         elif "k" in parameters:
             df = parameters.pop("k")
         return _stats.chi(df)
+    
+class ChiSquaredDistribution(ContinuousDistribution):
+    """A chi-squared distribution."""
+    
+    options = [
+        ["k"],
+        ["df"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.chi2]:
+        if "df" in parameters:
+            df = parameters.pop("df")
+        elif "k" in parameters:
+            df = parameters.pop("k")
+        return _stats.chi2(df)
+    
+class CosineDistribution(ContinuousDistribution):
+    """A cosine approximation to the normal distribution."""
+    
+    options = [
+        ["loc", "scale"]
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.cosine]:
+        if "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        return _stats.cosine(loc, scale)
+    
+class UniformContinuousDistribution(ContinuousDistribution):
+    """A uniform continuous distribution."""
+    
+    options = [
+        ["a", "b"], 
+        ["loc", "scale"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.uniform]:
+        if "a" in parameters and "b" in parameters:
+            loc = parameters.pop("a")
+            scale = parameters.pop("b") - loc
+        elif "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        return _stats.uniform(loc, scale)
