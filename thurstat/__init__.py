@@ -38,7 +38,7 @@ __all__ = [
     # predefined discrete distributions
     "BinomialDistribution", "BernoulliDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution", "UniformDiscreteDistribution",
     # predefined continuous distributions
-    "CauchyDistribution", "CosineDistribution", "ChiDistribution", "UniformContinuousDistribution",
+    "CauchyDistribution", "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution", "UniformContinuousDistribution",
 ]
 
 _Numeric = _Union[int, float]
