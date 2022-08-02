@@ -22,7 +22,7 @@ import scipy.stats as _stats
 from scipy.misc import derivative as _derivative
 from scipy.integrate import quad_vec as _quad_vec
 from scipy.interpolate import interp1d as _interp1d
-from scipy.optimize import brentq as brentq, minimize_scalar as _minimize_scalar
+from scipy.optimize import brentq as _brentq, minimize_scalar as _minimize_scalar
 
 __all__ = [
     # global
@@ -590,7 +590,7 @@ class ContinuousDistribution(Distribution):
             b = func(result.x)
         
         if len(inverse_funcs) == 0:
-            inverse_func = _np.vectorize(lambda y: brentq(lambda x: func(x) - y, a=a0, b=b0))
+            inverse_func = _np.vectorize(lambda y: _brentq(lambda x: func(x) - y, a=a0, b=b0))
             return self.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
         elif len(inverse_funcs) == 1:
             inverse_func = inverse_funcs[0]
