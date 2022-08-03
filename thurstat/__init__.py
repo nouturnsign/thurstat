@@ -37,9 +37,13 @@ __all__ = [
     # events and probability
     "P", "probability_of",
     # predefined discrete distributions
-    "BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution", "UniformDiscreteDistribution",
+    "BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", "BinomialDistribution", 
+    "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", 
+    "NegativeHypergeometricDistribution", "PoissonDistribution", "SkellamDistribution", 
+    "UniformDiscreteDistribution", "YuleSimonDistribution", "ZipfDistribution", "ZipfianDistribution",
     # predefined continuous distributions
-    "CauchyDistribution", "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution", "UniformContinuousDistribution",
+    "CauchyDistribution", "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution", 
+    "UniformContinuousDistribution",
 ]
 
 _Numeric = _Union[int, float]
