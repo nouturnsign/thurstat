@@ -38,7 +38,7 @@ __all__ = [
     # predefined discrete distributions
     "UniformDiscreteDistribution", "BinomialDistribution", "BernoulliDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution",
     # predefined continuous distributions
-    "UniformContinuousDistribution", "CauchyDistribution", "CosineDistribution", "ChiDistribution",
+    "UniformContinuousDistribution", "CauchyDistribution", "CosineDistribution", "ChiDistribution", "Chi2Distribution",
 ]
 
 _Numeric = _Union[int, float]
@@ -1021,4 +1021,69 @@ class ChiDistribution(ContinuousDistribution):
             df = parameters.pop("df")
         elif "k" in parameters:
             df = parameters.pop("k")
-        return _stats.cosine(df)
+        return _stats.chi(df)
+
+class Chi2Distribution(ContinuousDistribution):
+    """A Chi2 distribution"""
+    
+    options = [
+        ["k"],
+        ["df"],
+    ]
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.chi2]:
+        if "df" in parameters:
+            df = parameters.pop("df")
+        elif "k" in parameters:
+            df = parameters.pop("k")
+        return _stats.chi2(df)
+
+class ExponentialDistribution(ContinuousDistribution):
+    """An exponential continuous random variable"""
+    
+    options = [
+        ["loc","scale"]
+    ]
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
+        if "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        return _stats.expon(loc,scale)
+
+class FDistribution(ContinuousDistribution):
+    """An F continuous random variable"""
+    
+    options = [
+        ["dfn","dfd"]
+    ]
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
+        if "dfn" in parameters:
+            dfn = parameters.pop("dfn")
+        elif "dfd" in parameters:
+            dfn = parameters.pop("dfd")
+        return _stats.f(dfn)
+
+class NormalDistribution(ContinuousDistribution):
+    """A normal continuous random variable"""
+    
+    options = [
+        ["loc","scale"]
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
+        if "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        return _stats.norm(loc,scale)
+
+class TDistribution(ContinuousDistribution):
+    """A Student's continuous t random variable"""
+    
+    options = [
+        ["v","df"]
+    ]
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
+        if "df" in parameters:
+            df = parameters.pop("df")
+        elif "v" in parameters:
+            df = parameters.pop("v")
+        return _stats.t(df)
