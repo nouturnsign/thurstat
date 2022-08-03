@@ -783,6 +783,25 @@ class BernoulliDistribution(DiscreteDistribution):
             p = 1 - parameters.pop("q")
         return _stats.bernoulli(p)
     
+class BetaBinomialDistribution(DiscreteDistribution):
+    """A beta-binomial distribution."""
+    
+    options = [
+        ["n", "a", "b"],
+        ["n", "alpha", "beta"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.betabinom]:
+        if "n" in parameters:
+            n = parameters.pop("n")
+            if "a" in parameters and "b" in parameters:
+                a = parameters.pop("a")
+                b = parameters.pop("b")
+            elif "alpha" in parameters and "beta" in parameters:
+                a = parameters.pop("alpha")
+                b = parameters.pop("beta")
+        return _stats.betabinom(n, a, b)
+    
 class BinomialDistribution(DiscreteDistribution):
     """A binomial distribution."""
     
@@ -946,6 +965,19 @@ class PoissonDistribution(DiscreteDistribution):
             mu = parameters.pop("r") * parameters.pop("t")
         return _stats.poisson(mu)
     
+class SkellamDistribution(DiscreteDistribution):
+    """A Skellam distribution."""
+    
+    options = [
+        ["mu1", "mu2"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.skellam]:
+        if "mu1" in parameters and "mu2" in parameters:
+            mu1 = parameters.pop("mu1")
+            mu2 = parameters.pop("mu2")
+        return _stats.skellam(mu1, mu2)
+    
 class UniformDiscreteDistribution(DiscreteDistribution):
     """A uniform discrete distribution."""
     
@@ -962,6 +994,56 @@ class UniformDiscreteDistribution(DiscreteDistribution):
             low = parameters.pop("low")
             high = parameters.pop("high")
         return _stats.randint(low, high)
+    
+class YuleSimonDistribution(DiscreteDistribution):
+    """A Yule-Simon distribution."""
+    
+    options = [
+        ["alpha"],
+        ["rho"],
+        ["a"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.yulesimon]:
+        if "alpha" in parameters:
+            alpha = parameters.pop("alpha")
+        elif "rho" in parameters:
+            alpha = parameters.pop("rho")
+        elif "a" in parameters:
+            alpha = parameters.pop("a") - 1
+        return _stats.yulesimon(alpha)
+    
+class ZipfDistribution(DiscreteDistribution):
+    """A Zipf or zeta distribution."""
+    
+    options = [
+        ["a"],
+        ["s"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) ->_Type[_stats.zipf]:
+        if "a" in parameters:
+            a = parameters.pop("a")
+        elif "s" in parameters:
+            a = parameters.pop("s")
+        return _stats.zipf(a)
+    
+class ZipfianDistribution(DiscreteDistribution):
+    """A Zipfian distribution."""
+    
+    options = [
+        ["a", "n"],
+        ["s", "N"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.zipfian]:
+        if "a" in parameters and "n" in parameters:
+            a = parameters.pop("a")
+            n = parameters.pop("n")
+        elif "s" in parameters:
+            a = parameters.pop("s")
+            n = parameters.pop("N")
+        return _stats.zipfian(a, n)
     
 class CauchyDistribution(ContinuousDistribution):
     """A Cauchy distribution."""
