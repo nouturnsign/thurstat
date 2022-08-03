@@ -23,6 +23,7 @@ from scipy.misc import derivative as _derivative
 from scipy.integrate import quad_vec as _quad_vec
 from scipy.interpolate import interp1d as _interp1d
 from scipy.optimize import brentq as _brentq, minimize_scalar as _minimize_scalar
+from scipy.stats._distn_infrastructure import rv_frozen as _rv_frozen
 
 __all__ = [
     # global
@@ -36,7 +37,7 @@ __all__ = [
     # events and probability
     "P", "probability_of",
     # predefined discrete distributions
-    "BinomialDistribution", "BernoulliDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution", "UniformDiscreteDistribution",
+    "BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution", "UniformDiscreteDistribution",
     # predefined continuous distributions
     "CauchyDistribution", "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution", "UniformContinuousDistribution",
 ]
@@ -99,7 +100,7 @@ class Distribution(_abc.ABC):
             raise ParameterValidationError(given, self.options)
     
     @_abc.abstractmethod  
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Optional[_rv_frozen]:
         pass
     
     @property
@@ -217,7 +218,7 @@ class Distribution(_abc.ABC):
     
     @classmethod
     @_abc.abstractmethod
-    def from_dist(cls, dist: _Union[_stats.rv_discrete, _stats.rv_continuous]) -> CustomDistribution:
+    def from_dist(cls, dist: _rv_frozen) -> CustomDistribution:
         pass
     
     @_abc.abstractmethod
@@ -381,7 +382,7 @@ class CustomDistribution(Distribution):
     options = None
     
     @_abc.abstractmethod
-    def __init__(self, dist: _Union[_stats.rv_discrete, _stats.rv_continuous]) -> None:
+    def __init__(self, dist: _rv_frozen) -> None:
         self._dist = dist
         
     def interpret_parameterization(self) -> None:
@@ -503,7 +504,8 @@ class DiscreteDistribution(Distribution):
         return cls.from_dist(NewScipyDiscreteDistribution(a=a, b=b))
     
     @classmethod
-    def from_dist(cls, dist: _stats.rv_discrete) -> CustomDiscreteDistribution:
+    def from_dist(cls, dist: _rv_frozen) -> CustomDiscreteDistribution:
+        """Create a discrete distribution from a frozen `scipy.stats.rv_discrete` object."""
         return CustomDiscreteDistribution(dist)
 
     def apply_infix_operator(self, other: _Union[_Numeric, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType = None) -> _Self:
@@ -535,8 +537,8 @@ class DiscreteDistribution(Distribution):
 class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
     """A custom discrete distribution."""
     
-    def __init__(self, dist: _stats.rv_discrete) -> None:
-        """Create a `CustomDiscreteDistribution` object given a `scipy.stats.rv_discrete` object."""
+    def __init__(self, dist: _rv_frozen) -> None:
+        """Create a `CustomDiscreteDistribution` object given a frozen `scipy.stats.rv_discrete` object."""
         self._dist = dist
     
 class ContinuousDistribution(Distribution):
@@ -657,7 +659,8 @@ class ContinuousDistribution(Distribution):
         return cls.from_dist(NewScipyContinuousDistribution(a=a, b=b))
     
     @classmethod
-    def from_dist(cls, dist: _stats.rv_continuous) -> CustomContinuousDistribution:
+    def from_dist(cls, dist: _rv_frozen) -> CustomContinuousDistribution:
+        """Create a `CustomContinuousDistribution` object given a frozen `scipy.stats.rv_continuous` object."""
         return CustomContinuousDistribution(dist)
     
     def discretize(self) -> DiscreteDistribution:
@@ -707,8 +710,8 @@ class ContinuousDistribution(Distribution):
 class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     """A custom custom distribution."""
 
-    def __init__(self, dist: _stats.rv_continuous) -> None:
-        """Create a `CustomContinuousDistribution` object given a `scipy.stats.rv_continuous` object."""
+    def __init__(self, dist: _rv_frozen) -> None:
+        """Create a `CustomContinuousDistribution` object given a frozen `scipy.stats.rv_continuous` object."""
         self._dist = dist
         
 class Alias(object):
