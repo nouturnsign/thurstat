@@ -8,7 +8,6 @@ from typing import (
     Callable as _Callable, 
     Dict as _Dict, 
     List as _List, 
-    NamedTuple as _NamedTuple, 
     Optional as _Optional, 
     Type as _Type, 
     Union as _Union
@@ -22,7 +21,8 @@ import scipy.stats as _stats
 from scipy.misc import derivative as _derivative
 from scipy.integrate import quad_vec as _quad_vec
 from scipy.interpolate import interp1d as _interp1d
-from scipy.optimize import brentq as brentq, minimize_scalar as _minimize_scalar
+from scipy.optimize import brentq as _brentq, minimize_scalar as _minimize_scalar
+from scipy.stats._distn_infrastructure import rv_frozen as _rv_frozen
 
 __all__ = [
     # global
@@ -36,16 +36,20 @@ __all__ = [
     # events and probability
     "P", "probability_of",
     # predefined discrete distributions
-    "UniformDiscreteDistribution", "BinomialDistribution", "BernoulliDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution",
+    "BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", "BinomialDistribution", 
+    "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", 
+    "NegativeHypergeometricDistribution", "PoissonDistribution", "SkellamDistribution", 
+    "UniformDiscreteDistribution", "YuleSimonDistribution", "ZipfDistribution", "ZipfianDistribution",
     # predefined continuous distributions
-    "UniformContinuousDistribution", "CauchyDistribution", "CosineDistribution", "ChiDistribution", "Chi2Distribution",
+    "CauchyDistribution", "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution", 
+    "UniformContinuousDistribution",
 ]
 
 _Numeric = _Union[int, float]
 _NumericFunction = _Callable[[_Numeric], _Numeric]
 _ProbabilityFunction = _Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"]
 
-class pfunc(_NamedTuple):
+class pfunc(_abc.ABC):
     """Acceptable probability function abbreviations."""
     PDF: str = "pdf"
     PMF: str = "pmf"
@@ -74,7 +78,7 @@ def update_defaults(**kwargs):
         _warnings.filterwarnings(DEFAULTS["warnings"])
 
 class ParameterValidationError(Exception):
-    """Raised when an invalid set of parameters are used to instantiate a Distribution."""
+    """Raised when an invalid set of parameters are used to instantiate a `Distribution`."""
     
     def __init__(self, given: _List[str], options: _Optional[_List[_List[str]]]=None):
         """Create the error with the given parameters and optional parameters."""
@@ -89,7 +93,7 @@ class Distribution(_abc.ABC):
     options: _Optional[_List[_List[str]]]
     
     def __init__(self, **parameters: float) -> None:
-        """Create a distribution object given the parameters as named keyword arguments."""
+        """Create an independent random variable given the parameters as named keyword arguments."""
         given = list(parameters.keys())
         try:
             self._dist = self.interpret_parameterization(parameters)
@@ -99,7 +103,7 @@ class Distribution(_abc.ABC):
             raise ParameterValidationError(given, self.options)
     
     @_abc.abstractmethod  
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Optional[_rv_frozen]:
         pass
     
     @property
@@ -217,7 +221,7 @@ class Distribution(_abc.ABC):
     
     @classmethod
     @_abc.abstractmethod
-    def from_dist(cls, dist: _Union[_stats.rv_discrete, _stats.rv_continuous]) -> CustomDistribution:
+    def from_dist(cls, dist: _rv_frozen) -> CustomDistribution:
         pass
     
     @_abc.abstractmethod
@@ -381,7 +385,7 @@ class CustomDistribution(Distribution):
     options = None
     
     @_abc.abstractmethod
-    def __init__(self, dist: _Union[_stats.rv_discrete, _stats.rv_continuous]) -> None:
+    def __init__(self, dist: _rv_frozen) -> None:
         self._dist = dist
         
     def interpret_parameterization(self) -> None:
@@ -394,9 +398,9 @@ class DiscreteDistribution(Distribution):
         """Calculate the probability P(a <= X <= b), including both a and b."""
         return self.evaluate("cdf", b) - self.evaluate("cdf", a - 1)
     
-    def probability_at(self, a: float) -> float:
-        """Calculate the probability P(X == a)."""
-        return self.evaluate("pmf", a)
+    def probability_at(self, k: float) -> float:
+        """Calculate the probability P(X == k)."""
+        return self.evaluate("pmf", k)
     
     def apply_func(self, func: _NumericFunction, *, infinity_approximation: _Optional[int]=None, a: _Optional[int]=None, b: _Optional[int]=None) -> CustomDiscreteDistribution:
         """
@@ -503,7 +507,8 @@ class DiscreteDistribution(Distribution):
         return cls.from_dist(NewScipyDiscreteDistribution(a=a, b=b))
     
     @classmethod
-    def from_dist(cls, dist: _stats.rv_discrete) -> CustomDiscreteDistribution:
+    def from_dist(cls, dist: _rv_frozen) -> CustomDiscreteDistribution:
+        """Create a discrete distribution from a frozen `scipy.stats.rv_discrete` object."""
         return CustomDiscreteDistribution(dist)
 
     def apply_infix_operator(self, other: _Union[_Numeric, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType = None) -> _Self:
@@ -535,8 +540,8 @@ class DiscreteDistribution(Distribution):
 class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
     """A custom discrete distribution."""
     
-    def __init__(self, dist: _stats.rv_discrete) -> None:
-        """Create a `CustomDiscreteDistribution` object given a `scipy.stats.rv_discrete` object."""
+    def __init__(self, dist: _rv_frozen) -> None:
+        """Create a `CustomDiscreteDistribution` object given a frozen `scipy.stats.rv_discrete` object."""
         self._dist = dist
     
 class ContinuousDistribution(Distribution):
@@ -546,8 +551,8 @@ class ContinuousDistribution(Distribution):
         """Calculate the probability P(a <= X <= b), including both a and b."""
         return self.evaluate("cdf", b) - self.evaluate("cdf", a)
     
-    def probability_at(self, a: float) -> float:
-        """Calculate the probability P(X == a). Always returns 0."""
+    def probability_at(self, x: float) -> float:
+        """Calculate the probability P(X == x). Always returns 0."""
         _warnings.warn("Trying to calculate the point probability of a continuous distribution.")
         return 0
     
@@ -590,7 +595,7 @@ class ContinuousDistribution(Distribution):
             b = func(result.x)
         
         if len(inverse_funcs) == 0:
-            inverse_func = _np.vectorize(lambda y: brentq(lambda x: func(x) - y, a=a0, b=b0))
+            inverse_func = _np.vectorize(lambda y: _brentq(lambda x: func(x) - y, a=a0, b=b0))
             return self.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
         elif len(inverse_funcs) == 1:
             inverse_func = inverse_funcs[0]
@@ -657,7 +662,8 @@ class ContinuousDistribution(Distribution):
         return cls.from_dist(NewScipyContinuousDistribution(a=a, b=b))
     
     @classmethod
-    def from_dist(cls, dist: _stats.rv_continuous) -> CustomContinuousDistribution:
+    def from_dist(cls, dist: _rv_frozen) -> CustomContinuousDistribution:
+        """Create a `CustomContinuousDistribution` object given a frozen `scipy.stats.rv_continuous` object."""
         return CustomContinuousDistribution(dist)
     
     def discretize(self) -> DiscreteDistribution:
@@ -705,10 +711,10 @@ class ContinuousDistribution(Distribution):
             raise NotImplementedError(f"Binary operation between objects of type {type(self)} and {type(other)} is currently undefined.")
     
 class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
-    """A custom custom distribution."""
+    """A custom continuous distribution."""
 
-    def __init__(self, dist: _stats.rv_continuous) -> None:
-        """Create a `CustomContinuousDistribution` object given a `scipy.stats.rv_continuous` object."""
+    def __init__(self, dist: _rv_frozen) -> None:
+        """Create a `CustomContinuousDistribution` object given a frozen `scipy.stats.rv_continuous` object."""
         self._dist = dist
         
 class Alias(object):
@@ -719,7 +725,7 @@ class Alias(object):
         self._tdist = tdist
         self.interpret_parameters = interpret_parameters
         
-    def __call__(self, *value_parameters: _Numeric) -> _Type[Distribution]:
+    def __call__(self, *value_parameters: _Numeric) -> Distribution:
         """Return a distribution interpreted by the alias."""
         return self._tdist(**{k: v for k, v in zip(self.interpret_parameters, value_parameters)})
         
@@ -768,23 +774,6 @@ def P(evt: Event) -> float:
     """Return the probability of an event."""
     return probability_of(evt)
     
-class UniformDiscreteDistribution(DiscreteDistribution):
-    """A uniform discrete distribution."""
-    
-    options = [
-        ["a", "b"], 
-        ["low", "high"],
-    ]
-    
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.randint]:
-        if "a" in parameters and "b" in parameters:
-            low = parameters.pop("a")
-            high = parameters.pop("b") + 1
-        elif "low" in parameters and "high" in parameters:
-            low = parameters.pop("low")
-            high = parameters.pop("high")
-        return _stats.randint(low, high)
-    
 class BernoulliDistribution(DiscreteDistribution):
     """A Bernoulli distribution."""
     
@@ -793,12 +782,31 @@ class BernoulliDistribution(DiscreteDistribution):
         ["q"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.bernoulli]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "p" in parameters:
             p = parameters.pop("p")
         elif "q" in parameters:
             p = 1 - parameters.pop("q")
         return _stats.bernoulli(p)
+    
+class BetaBinomialDistribution(DiscreteDistribution):
+    """A beta-binomial distribution."""
+    
+    options = [
+        ["n", "a", "b"],
+        ["n", "alpha", "beta"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+        if "n" in parameters:
+            n = parameters.pop("n")
+            if "a" in parameters and "b" in parameters:
+                a = parameters.pop("a")
+                b = parameters.pop("b")
+            elif "alpha" in parameters and "beta" in parameters:
+                a = parameters.pop("alpha")
+                b = parameters.pop("beta")
+        return _stats.betabinom(n, a, b)
     
 class BinomialDistribution(DiscreteDistribution):
     """A binomial distribution."""
@@ -808,7 +816,7 @@ class BinomialDistribution(DiscreteDistribution):
         ["n", "q"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.binom]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "n" in parameters:
             n = parameters.pop("n")
             if "p" in parameters:
@@ -825,7 +833,7 @@ class GeometricDistribution(DiscreteDistribution):
         ["q"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.geom]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "p" in parameters:
             p = parameters.pop("p")
         elif "q" in parameters:
@@ -843,7 +851,7 @@ class HypergeometricDistribution(DiscreteDistribution):
         ["N1", "N2", "n"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.hypergeom]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "M" in parameters and "n" in parameters and "N" in parameters:
             M = parameters.pop("M")
             n = parameters.pop("n")
@@ -879,7 +887,7 @@ class NegativeBinomialDistribution(DiscreteDistribution):
         ["mu", "alpha"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.nbinom]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "mean" in parameters and "variance" in parameters:
             mean = parameters.pop("mean")
             variance = parameters.pop("variance")
@@ -925,7 +933,7 @@ class NegativeHypergeometricDistribution(DiscreteDistribution):
         ["N1", "N2", "r"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.nhypergeom]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "r" in parameters:
             r = parameters.pop("r")
             if "M" in parameters and "n" in parameters:
@@ -954,7 +962,7 @@ class PoissonDistribution(DiscreteDistribution):
         ["r", "t"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.poisson]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "mu" in parameters:
             mu = parameters.pop("mu")
         elif "lambda_" in parameters:
@@ -963,22 +971,85 @@ class PoissonDistribution(DiscreteDistribution):
             mu = parameters.pop("r") * parameters.pop("t")
         return _stats.poisson(mu)
     
-class UniformContinuousDistribution(ContinuousDistribution):
-    """A uniform continuous distribution."""
+class SkellamDistribution(DiscreteDistribution):
+    """A Skellam distribution."""
+    
+    options = [
+        ["mu1", "mu2"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+        if "mu1" in parameters and "mu2" in parameters:
+            mu1 = parameters.pop("mu1")
+            mu2 = parameters.pop("mu2")
+        return _stats.skellam(mu1, mu2)
+    
+class UniformDiscreteDistribution(DiscreteDistribution):
+    """A random integer or uniform discrete distribution."""
     
     options = [
         ["a", "b"], 
-        ["loc", "scale"],
+        ["low", "high"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.uniform]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "a" in parameters and "b" in parameters:
-            loc = parameters.pop("a")
-            scale = parameters.pop("b") - loc
-        elif "loc" in parameters and "scale" in parameters:
-            loc = parameters.pop("loc")
-            scale = parameters.pop("scale")
-        return _stats.uniform(loc, scale)
+            low = parameters.pop("a")
+            high = parameters.pop("b") + 1
+        elif "low" in parameters and "high" in parameters:
+            low = parameters.pop("low")
+            high = parameters.pop("high")
+        return _stats.randint(low, high)
+    
+class YuleSimonDistribution(DiscreteDistribution):
+    """A Yule-Simon distribution."""
+    
+    options = [
+        ["alpha"],
+        ["rho"],
+        ["a"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+        if "alpha" in parameters:
+            alpha = parameters.pop("alpha")
+        elif "rho" in parameters:
+            alpha = parameters.pop("rho")
+        elif "a" in parameters:
+            alpha = parameters.pop("a") - 1
+        return _stats.yulesimon(alpha)
+    
+class ZipfDistribution(DiscreteDistribution):
+    """A Zipf or zeta distribution."""
+    
+    options = [
+        ["a"],
+        ["s"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+        if "a" in parameters:
+            a = parameters.pop("a")
+        elif "s" in parameters:
+            a = parameters.pop("s")
+        return _stats.zipf(a)
+    
+class ZipfianDistribution(DiscreteDistribution):
+    """A Zipfian distribution."""
+    
+    options = [
+        ["a", "n"],
+        ["s", "N"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+        if "a" in parameters and "n" in parameters:
+            a = parameters.pop("a")
+            n = parameters.pop("n")
+        elif "s" in parameters:
+            a = parameters.pop("s")
+            n = parameters.pop("N")
+        return _stats.zipfian(a, n)
     
 class CauchyDistribution(ContinuousDistribution):
     """A Cauchy distribution."""
@@ -988,7 +1059,7 @@ class CauchyDistribution(ContinuousDistribution):
         ["loc", "scale"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.cauchy]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "x0" in parameters and "gamma" in parameters:
             loc = parameters.pop("x0")
             scale = parameters.pop("gamma")
@@ -996,46 +1067,66 @@ class CauchyDistribution(ContinuousDistribution):
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
         return _stats.cauchy(loc, scale)
-    
-class CosineDistribution(ContinuousDistribution):
-    """A cosine approximation to the normal distribution"""
-    options = [
-        ["loc","scale"]
-    ]
-    
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.cosine]:
-        if "loc" in parameters and "scale" in parameters:
-            loc = parameters.pop("loc")
-            scale = parameters.pop("scale")
-        return _stats.cosine(loc,scale)
 
 class ChiDistribution(ContinuousDistribution):
-    """A Chi distribution"""
+    """A chi distribution."""
     
     options = [
         ["k"],
         ["df"],
     ]
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.chi]:
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "df" in parameters:
             df = parameters.pop("df")
         elif "k" in parameters:
             df = parameters.pop("k")
         return _stats.chi(df)
-
-class Chi2Distribution(ContinuousDistribution):
-    """A Chi2 distribution"""
+    
+class ChiSquaredDistribution(ContinuousDistribution):
+    """A chi-squared distribution."""
     
     options = [
         ["k"],
         ["df"],
     ]
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Type[_stats.chi2]:
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "df" in parameters:
             df = parameters.pop("df")
         elif "k" in parameters:
             df = parameters.pop("k")
         return _stats.chi2(df)
+    
+class CosineDistribution(ContinuousDistribution):
+    """A cosine approximation to the normal distribution."""
+    
+    options = [
+        ["loc", "scale"]
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+        if "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        return _stats.cosine(loc, scale)
+    
+class UniformContinuousDistribution(ContinuousDistribution):
+    """A uniform continuous distribution."""
+    
+    options = [
+        ["a", "b"], 
+        ["loc", "scale"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+        if "a" in parameters and "b" in parameters:
+            loc = parameters.pop("a")
+            scale = parameters.pop("b") - loc
+        elif "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        return _stats.uniform(loc, scale)
 
 class ExponentialDistribution(ContinuousDistribution):
     """An exponential continuous random variable"""
