@@ -7,6 +7,16 @@ update_defaults(warnings="ignore", infinity_approximation=1e3)
 k = FormulaVariable()
 x = FormulaVariable()
 
+Die = UniformDiscreteDistribution.to_alias("a", "b")
+die1 = Die(1, 6)
+die2 = Die(1, 6)
+A = die1 + die2
+print(A.mean)
+print(A.generate_random_values(10))
+print(P(4 <= A <= 10))
+print(P(A == 7))
+A.display("pmf")
+
 B = BinomialDistribution.to_alias("n", "p")
 C = B(10, 0.2)
 C.display("pmf")

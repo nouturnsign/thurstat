@@ -154,7 +154,7 @@ class Distribution(_abc.ABC):
             seed = DEFAULTS["local_seed"]
         else:
             seed = DEFAULTS["global_seed"]
-        return self._dist.rvs(n, random_state=seed)
+        return self._dist.rvs(size=n, random_state=seed)
     
     def evaluate(self, pfunc: _ProbabilityFunction, at: float) -> float:
         """
