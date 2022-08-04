@@ -1144,14 +1144,21 @@ class FDistribution(ContinuousDistribution):
     """An F continuous random variable"""
     
     options = [
-        ["dfn","dfd"]
+        ["dfn", "dfd"],
+        ["df1", "df2"],
+        ["d1", "d2"],
     ]
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
-        if "dfn" in parameters:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+        if "dfn" in parameters and "dfd" in parameters:
             dfn = parameters.pop("dfn")
-        elif "dfd" in parameters:
-            dfn = parameters.pop("dfd")
-        return _stats.f(dfn)
+            dfd = parameters.pop("dfd")
+        elif "df1" in parameters and "df2" in parameters:
+            dfn = parameters.pop("df1")
+            dfd = parameters.pop("df2")
+        elif "d1" in parameters and "d2" in parameters:
+            dfn = parameters.pop("d1")
+            dfd = parameters.pop("d2")
+        return _stats.f(dfn, dfd)
 
 class NormalDistribution(ContinuousDistribution):
     """A normal continuous random variable"""
