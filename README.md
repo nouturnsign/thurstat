@@ -1,13 +1,13 @@
 # thurstat
 
-thurstat is a WIP easy-to-use univariate probability distribution module, mainly convenient wrappers for scipy.stats. Sometimes sacrifices precise accuracy, for time and convenience.
+thurstat is a WIP easy-to-use univariate probability distribution module, mainly convenient wrappers for scipy.stats. Sometimes sacrifices accuracy for time and convenience.
 
 ## Installation
 
 Python >= 3.7, specifically with Google Colab usage in mind.
 
 ```bash
-pip install git+https://bitbucket.org/nouturnsign/thurstat
+pip install git+https://github.com/nouturnsign/thurstat
 ```
 
 ## Usage
@@ -47,13 +47,16 @@ To get probability functions, use `pfunc` with dot accessor. e.g. `pfunc.PDF`. A
 ### Predefined discrete distributions
 
 ```py
-["UniformDiscreteDistribution", "BinomialDistribution", "BernoulliDistribution", "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", "PoissonDistribution"]
+["BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", "BinomialDistribution", 
+ "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", 
+ "NegativeHypergeometricDistribution", "PoissonDistribution", "SkellamDistribution", 
+ "UniformDiscreteDistribution", "YuleSimonDistribution", "ZipfDistribution", "ZipfianDistribution"]
 ```
 
 ### Predefined continuous distributions
 
 ```py
-["UniformContinuousDistribution", "CauchyDistribution"]
+["UniformContinuousDistribution", "CauchyDistribution"] # outdated, needs update
 ```
 
 ### Creating distribution objects
@@ -100,9 +103,9 @@ from_dist(dist)
 
 ### Custom distributions
 
-Use the classmethod `from_pfunc` or `from_dist` with the type of desired distribution. When using `from_dist`, input a `scipy.rv_...` object. 
+Use the classmethod `from_pfunc` or `from_dist` with the type of desired distribution. When using `from_dist`, input a `rv_frozen` object. In other words, create a distribution using `scipy.stats.[distribution]` and pass that into `from_dist`.
 
-Alternatively, create a new class inheriting from the desired type of distribution and implement method `interpret_parameters` to return a `scipy.rv_...` object. This allows for creating a general class of distribution with acceptable parameters instead of a new custom distribution every time the parameters are changed.
+Alternatively, create a new class inheriting from the desired type of distribution and implement method `interpret_parameters` to return a `rv_frozen` object. This allows for creating a general class of distribution with acceptable parameters instead of a new custom distribution every time the parameters are changed.
 
 e.g.
 ```py
@@ -160,7 +163,7 @@ def sqrt(x):
     return x ** 0.5
 X = ContinuousDistribution.from_pfunc("pdf", 1.5 * sqrt(x), a=0, b=1)
 
-# using formula decorator
+# using formula decorator on distributions
 @formula
 def square(x):
     return x ** 2
@@ -232,14 +235,14 @@ update_defaults(warnings="ignore", infinity_approximation=1e3)
 
 ## Future goals
 
-- apply division and exponentiation (integer only powers when distribution is the base) on distributions
-- create dependent distributions
-- event boolean arithmetic
-- add tests
+- implement division and exponentiation (in the general case) on distributions
+- implement multivariate distributions and create dependent distributions
+- implement conditional probability and events
 - improve accuracy of approximations for continuous random variable arithmetic
-- implement multivariate distributions
-- more distributions
+- implement event arithmetic
 - implement model fitting
+- add more distributions
+- add tests
 
 ## License
 
