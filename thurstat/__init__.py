@@ -758,16 +758,14 @@ def probability_of(evt: Event) -> float:
             probability += evt._tdist.probability_at(atomic.lower)
             continue
         
-        if isinstance(evt._tdist, ContinuousDistribution):
-            probability += evt._tdist.probability_between(atomic.lower, atomic.upper)
-        elif isinstance(evt._tdist, DiscreteDistribution):
-            lower = atomic.lower
+        lower = atomic.lower
+        upper = atomic.upper
+        if isinstance(evt._tdist, DiscreteDistribution):
             if atomic.left == _portion.OPEN:
                 lower += 1
-            upper = atomic.upper
             if atomic.right == _portion.OPEN:
                 upper -= 1
-            probability += evt._tdist.probability_between(lower, upper)
+        probability += evt._tdist.probability_between(lower, upper)
     return probability
     
 def P(evt: Event) -> float:
