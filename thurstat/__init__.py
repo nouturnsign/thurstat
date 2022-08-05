@@ -216,16 +216,6 @@ class Distribution(_abc.ABC):
     def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _Optional[str]=None, **kwargs) -> None:
         pass
     
-    @classmethod
-    @_abc.abstractmethod
-    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> _Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
-        pass
-    
-    @classmethod
-    @_abc.abstractmethod
-    def from_dist(cls, dist: _rv_frozen) -> CustomDistribution:
-        pass
-    
     @_abc.abstractmethod
     def apply_infix_operator(self, other: _Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
         pass
@@ -393,6 +383,11 @@ class CustomDistribution(Distribution):
     def interpret_parameterization(self) -> None:
         pass
     
+    @classmethod
+    @_abc.abstractmethod
+    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> _Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
+        pass
+    
 class DiscreteDistribution(Distribution):
     """The base class for discrete distributions. Do not instantiate this class."""
     
@@ -449,7 +444,7 @@ class DiscreteDistribution(Distribution):
         a = min(x_transform)
         b = max(x_transform)
         
-        return self.from_pfunc("pmf", _np.vectorize(lambda a: pmf.get(a, 0)), a, b)
+        return CustomDiscreteDistribution.from_pfunc("pmf", _np.vectorize(lambda a: pmf.get(a, 0)), a, b)
     
     def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _Optional[str]=None, **kwargs) -> None:
         """
@@ -484,9 +479,42 @@ class DiscreteDistribution(Distribution):
         stemlines.set_color(color)
         if not add:
             _plt.show()
+
+    def apply_infix_operator(self, other: _Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType = None) -> _Self:
+        """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
+        if isinstance(other, (int, float)):
+            a, b = self.support.lower, self.support.upper
+            a2, b2 = sorted((op(a, other), op(b, other)))
+            return CustomDiscreteDistribution.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
+        elif isinstance(other, DiscreteDistribution):
+            a0, b0 = self.support.lower, self.support.upper
+            if a0 == -_np.inf:
+                a0 = -DEFAULTS["infinity_approximation"]
+            if b0 == _np.inf:
+                b0 = DEFAULTS["infinity_approximation"]
+            a1, b1 = other.support.lower, other.support.upper
+            if a1 == -_np.inf:
+                a1 = -DEFAULTS["infinity_approximation"]
+            if b1 == _np.inf:
+                b1 = DEFAULTS["infinity_approximation"]
+            a, b = _np.arange(a0, b0 + 1), _np.arange(a1, b1 + 1)
+            pmf = {}
+            for x, y in _np.nditer(_np.array(_np.meshgrid(a, b)), flags=['external_loop'], order='F'):
+                pmf[op(x, y)] = pmf.get(op(x, y), 0) + self.evaluate("pmf", x) * other.evaluate("pmf", y)
+            a2, b2 = min(pmf.keys()), max(pmf.keys())
+            return CustomDiscreteDistribution.from_pfunc("pmf", _np.vectorize(lambda a: pmf.get(a, 0)), a2, b2)
+        else:
+            raise NotImplementedError(f"Binary operation between objects of type {type(self)} and {type(other)} is currently undefined.")
     
+class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
+    """A custom discrete distribution."""
+    
+    def __init__(self, dist: _rv_frozen) -> None:
+        """Create a `CustomDiscreteDistribution` object given a frozen `scipy.stats.rv_discrete` object."""
+        self._dist = dist
+        
     @classmethod    
-    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> CustomDiscreteDistribution:
+    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> _Self:
         """
         Create a distribution from a probability function.
         
@@ -508,45 +536,7 @@ class DiscreteDistribution(Distribution):
         if isinstance(pfunc, _Enum):
             pfunc = pfunc.value
         setattr(NewScipyDiscreteDistribution, "_" + pfunc, staticmethod(func))
-        return cls.from_dist(NewScipyDiscreteDistribution(a=a, b=b))
-    
-    @classmethod
-    def from_dist(cls, dist: _rv_frozen) -> CustomDiscreteDistribution:
-        """Create a discrete distribution from a frozen `scipy.stats.rv_discrete` object."""
-        return CustomDiscreteDistribution(dist)
-
-    def apply_infix_operator(self, other: _Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType = None) -> _Self:
-        """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
-        if isinstance(other, (int, float)):
-            a, b = self.support.lower, self.support.upper
-            a2, b2 = sorted((op(a, other), op(b, other)))
-            return self.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
-        elif isinstance(other, DiscreteDistribution):
-            a0, b0 = self.support.lower, self.support.upper
-            if a0 == -_np.inf:
-                a0 = -DEFAULTS["infinity_approximation"]
-            if b0 == _np.inf:
-                b0 = DEFAULTS["infinity_approximation"]
-            a1, b1 = other.support.lower, other.support.upper
-            if a1 == -_np.inf:
-                a1 = -DEFAULTS["infinity_approximation"]
-            if b1 == _np.inf:
-                b1 = DEFAULTS["infinity_approximation"]
-            a, b = _np.arange(a0, b0 + 1), _np.arange(a1, b1 + 1)
-            pmf = {}
-            for x, y in _np.nditer(_np.array(_np.meshgrid(a, b)), flags=['external_loop'], order='F'):
-                pmf[op(x, y)] = pmf.get(op(x, y), 0) + self.evaluate("pmf", x) * other.evaluate("pmf", y)
-            a2, b2 = min(pmf.keys()), max(pmf.keys())
-            return self.from_pfunc("pmf", _np.vectorize(lambda a: pmf.get(a, 0)), a2, b2)
-        else:
-            raise NotImplementedError(f"Binary operation between objects of type {type(self)} and {type(other)} is currently undefined.")
-    
-class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
-    """A custom discrete distribution."""
-    
-    def __init__(self, dist: _rv_frozen) -> None:
-        """Create a `CustomDiscreteDistribution` object given a frozen `scipy.stats.rv_discrete` object."""
-        self._dist = dist
+        return CustomDiscreteDistribution(NewScipyDiscreteDistribution(a=a, b=b))
     
 class ContinuousDistribution(Distribution):
     """The base class for continuous distributions. Do not instantiate this class."""
@@ -600,13 +590,13 @@ class ContinuousDistribution(Distribution):
         
         if len(inverse_funcs) == 0:
             inverse_func = _np.vectorize(lambda y: _brentq(lambda x: func(x) - y, a=a0, b=b0))
-            return self.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
+            return CustomContinuousDistribution.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
         elif len(inverse_funcs) == 1:
             inverse_func = inverse_funcs[0]
-            return self.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
+            return CustomContinuousDistribution.from_pfunc("cdf", lambda y: self.evaluate("cdf", inverse_func(y)), a=a, b=b)
         else:
             _warnings.warn("Multiple branched inverse functions are currently questionably implemented. Use 1 to 1 functions when possible.")
-            return self.from_pfunc("pdf", lambda y: sum(self.evaluate("pdf", inverse_func(y)) * _np.absolute(_derivative(inverse_func, y, dx=1 / infinity_approximation)) for inverse_func in inverse_funcs), a=a, b=b)
+            return CustomContinuousDistribution.from_pfunc("pdf", lambda y: sum(self.evaluate("pdf", inverse_func(y)) * _np.absolute(_derivative(inverse_func, y, dx=1 / infinity_approximation)) for inverse_func in inverse_funcs), a=a, b=b)
     
     def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _Optional[str]=None, **kwargs) -> None:
         """
@@ -642,8 +632,59 @@ class ContinuousDistribution(Distribution):
         if not add:
             _plt.show()
     
+    def discretize(self) -> DiscreteDistribution:
+        """Approximate the continuous distribution with a discrete distribution."""
+        return CustomDiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
+    
+    def apply_infix_operator(self, other: _Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
+        """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
+        if isinstance(other, (int, float)):
+            a, b = self.support.lower, self.support.upper
+            a2, b2 = sorted((op(a, other), op(b, other)))
+            return CustomContinuousDistribution.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
+        elif isinstance(other, ContinuousDistribution):
+            a0, b0 = self.support.lower, self.support.upper
+            if a0 == -_np.inf:
+                a0 = -DEFAULTS["infinity_approximation"]
+            if b0 == _np.inf:
+                b0 = DEFAULTS["infinity_approximation"]
+            a1, b1 = other.support.lower, other.support.upper
+            if a1 == -_np.inf:
+                a1 = -DEFAULTS["infinity_approximation"]
+            if b1 == _np.inf:
+                b1 = DEFAULTS["infinity_approximation"]
+            values = op(a0, a1), op(a0, b1), op(b0, a0), op(b0, b1)
+            a2, b2 = min(values), max(values)
+            
+            exact_pdf = lambda z: _quad_vec(lambda x: other.evaluate("pdf", inv_op(z, x)) * self.evaluate("pdf", x) * abs(1 if op != _operator.mul and op != _operator.truediv else inv_op(1, x + 1 / DEFAULTS["infinity_approximation"])), a=-_np.inf, b=_np.inf)[0]
+            if DEFAULTS["exact"]:
+                return CustomContinuousDistribution.from_pfunc("pdf", exact_pdf, a2, b2) 
+            
+            diff = b2 - a2
+            x = _np.linspace(a2, b2, int(diff) * DEFAULTS["ratio"])
+            
+            approximate_pdf = exact_pdf(x)          
+            @_np.vectorize
+            def approximate_cdf(z):
+                i = _np.searchsorted(x, z, side="right")
+                res = _np.trapz(approximate_pdf[:i], x[:i])
+                return res
+            y = approximate_cdf(x)
+            cdf = _interp1d(x[:-1], y[:-1], bounds_error=False, fill_value=(0, 1), assume_sorted=True)
+            
+            return CustomContinuousDistribution.from_pfunc("cdf", cdf, a2, b2)
+        else:
+            raise NotImplementedError(f"Binary operation between objects of type {type(self)} and {type(other)} is currently undefined.")
+    
+class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
+    """A custom continuous distribution."""
+
+    def __init__(self, dist: _rv_frozen) -> None:
+        """Create a `CustomContinuousDistribution` object given a frozen `scipy.stats.rv_continuous` object."""
+        self._dist = dist
+        
     @classmethod    
-    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> CustomContinuousDistribution:
+    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> _Self:
         """
         Create a distribution from a probability function.
         
@@ -665,63 +706,7 @@ class ContinuousDistribution(Distribution):
         if isinstance(pfunc, _Enum):
             pfunc = pfunc.value
         setattr(NewScipyContinuousDistribution, "_" + pfunc, staticmethod(func))
-        return cls.from_dist(NewScipyContinuousDistribution(a=a, b=b))
-    
-    @classmethod
-    def from_dist(cls, dist: _rv_frozen) -> CustomContinuousDistribution:
-        """Create a `CustomContinuousDistribution` object given a frozen `scipy.stats.rv_continuous` object."""
-        return CustomContinuousDistribution(dist)
-    
-    def discretize(self) -> DiscreteDistribution:
-        """Approximate the continuous distribution with a discrete distribution."""
-        return DiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
-    
-    def apply_infix_operator(self, other: _Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
-        """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
-        if isinstance(other, (int, float)):
-            a, b = self.support.lower, self.support.upper
-            a2, b2 = sorted((op(a, other), op(b, other)))
-            return self.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
-        elif isinstance(other, ContinuousDistribution):
-            a0, b0 = self.support.lower, self.support.upper
-            if a0 == -_np.inf:
-                a0 = -DEFAULTS["infinity_approximation"]
-            if b0 == _np.inf:
-                b0 = DEFAULTS["infinity_approximation"]
-            a1, b1 = other.support.lower, other.support.upper
-            if a1 == -_np.inf:
-                a1 = -DEFAULTS["infinity_approximation"]
-            if b1 == _np.inf:
-                b1 = DEFAULTS["infinity_approximation"]
-            values = op(a0, a1), op(a0, b1), op(b0, a0), op(b0, b1)
-            a2, b2 = min(values), max(values)
-            
-            exact_pdf = lambda z: _quad_vec(lambda x: other.evaluate("pdf", inv_op(z, x)) * self.evaluate("pdf", x) * abs(1 if op != _operator.mul and op != _operator.truediv else inv_op(1, x + 1 / DEFAULTS["infinity_approximation"])), a=-_np.inf, b=_np.inf)[0]
-            if DEFAULTS["exact"]:
-                return self.from_pfunc("pdf", exact_pdf, a2, b2) 
-            
-            diff = b2 - a2
-            x = _np.linspace(a2, b2, int(diff) * DEFAULTS["ratio"])
-            
-            approximate_pdf = exact_pdf(x)          
-            @_np.vectorize
-            def approximate_cdf(z):
-                i = _np.searchsorted(x, z, side="right")
-                res = _np.trapz(approximate_pdf[:i], x[:i])
-                return res
-            y = approximate_cdf(x)
-            cdf = _interp1d(x[:-1], y[:-1], bounds_error=False, fill_value=(0, 1), assume_sorted=True)
-            
-            return self.from_pfunc("cdf", cdf, a2, b2)
-        else:
-            raise NotImplementedError(f"Binary operation between objects of type {type(self)} and {type(other)} is currently undefined.")
-    
-class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
-    """A custom continuous distribution."""
-
-    def __init__(self, dist: _rv_frozen) -> None:
-        """Create a `CustomContinuousDistribution` object given a frozen `scipy.stats.rv_continuous` object."""
-        self._dist = dist
+        return CustomContinuousDistribution(NewScipyContinuousDistribution(a=a, b=b))
         
 class Alias(object):
     """An alias for a distribution given the parameter convention."""

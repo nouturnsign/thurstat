@@ -64,7 +64,7 @@ def exp(x):
     return np.exp(x)
 
 X = (
-    ContinuousDistribution
+    CustomContinuousDistribution
     .from_pfunc("cdf", -1 / (exp(x) + 1) + 1, a=-np.inf, b=np.inf)
     .apply_func(1 / (1 + exp(-x)))
 )
