@@ -3,6 +3,7 @@ from __future__ import annotations as _annotations
 import abc as _abc
 import operator as _operator
 import warnings as _warnings
+from enum import Enum as _Enum
 from types import BuiltinFunctionType as _BuiltinFunctionType
 from typing import (
     Callable as _Callable, 
@@ -45,11 +46,7 @@ __all__ = [
     "UniformContinuousDistribution",
 ]
 
-_Numeric = _Union[int, float]
-_NumericFunction = _Callable[[_Numeric], _Numeric]
-_ProbabilityFunction = _Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"]
-
-class pfunc(_abc.ABC):
+class pfunc(_Enum):
     """Acceptable probability function abbreviations."""
     PDF: str = "pdf"
     PMF: str = "pmf"
@@ -57,6 +54,10 @@ class pfunc(_abc.ABC):
     SF : str = "sf"
     PPF: str = "ppf"
     ISF: str = "isf"
+    
+_Numeric = _Union[int, float]
+_NumericFunction = _Callable[[_Numeric], _Numeric]
+_ProbabilityFunction = _Union[_Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"], pfunc]
 
 DEFAULTS = {
     "infinity_approximation": 1e6,
