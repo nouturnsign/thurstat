@@ -723,11 +723,11 @@ class Alias(object):
     def __init__(self, tdist: _Type[Distribution], *interpret_parameters: str) -> None:
         """Create an alias given the class of distribution and parameter names in the order they will be passed."""
         self._tdist = tdist
-        self.interpret_parameters = interpret_parameters
+        self._interpret_parameters = interpret_parameters
         
     def __call__(self, *value_parameters: _Numeric) -> Distribution:
         """Return a distribution interpreted by the alias."""
-        return self._tdist(**{k: v for k, v in zip(self.interpret_parameters, value_parameters)})
+        return self._tdist(**{k: v for k, v in zip(self._interpret_parameters, value_parameters)})
         
 class Event(object):
     """An event described by a distribution and interval."""
