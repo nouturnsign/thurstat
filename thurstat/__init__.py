@@ -173,6 +173,8 @@ class Distribution(_abc.ABC):
         float
             pfunc(at)
         """
+        if isinstance(pfunc, _Enum):
+            pfunc = pfunc.value
         return getattr(self._dist, pfunc)(at)
     
     def expected_value(self, func: _Optional[_NumericFunction]=None) -> float:
@@ -504,6 +506,8 @@ class DiscreteDistribution(Distribution):
             The new distribution.
         """
         class NewScipyDiscreteDistribution(_stats.rv_discrete): pass
+        if isinstance(pfunc, _Enum):
+            pfunc = pfunc.value
         setattr(NewScipyDiscreteDistribution, "_" + pfunc, staticmethod(func))
         return cls.from_dist(NewScipyDiscreteDistribution(a=a, b=b))
     
@@ -659,6 +663,8 @@ class ContinuousDistribution(Distribution):
             The new distribution.
         """
         class NewScipyContinuousDistribution(_stats.rv_continuous): pass
+        if isinstance(pfunc, _Enum):
+            pfunc = pfunc.value
         setattr(NewScipyContinuousDistribution, "_" + pfunc, staticmethod(func))
         return cls.from_dist(NewScipyContinuousDistribution(a=a, b=b))
     
