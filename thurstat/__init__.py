@@ -32,7 +32,7 @@ __all__ = [
     "FormulaVariable", "formula",
     # base classes
     "Distribution", "DiscreteDistribution", "ContinuousDistribution",
-    # instantiable equivalents of the base classes
+    # custom equivalents of the base classes
     "CustomDistribution", "CustomDiscreteDistribution", "CustomContinuousDistribution",
     # events and probability
     "P", "probability_of",
@@ -43,6 +43,7 @@ __all__ = [
     "UniformDiscreteDistribution", "YuleSimonDistribution", "ZipfDistribution", "ZipfianDistribution",
     # predefined continuous distributions
     "CauchyDistribution", "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution", 
+    "ExponentialDistribution", "FDistribution", "NormalDistribution", "TDistribution",
     "UniformContinuousDistribution",
 ]
 
