@@ -11,7 +11,7 @@ from typing import (
     List as _List, 
     Optional as _Optional, 
     Type as _Type, 
-    Union as _Union
+    Union as _Union,
 )
 from typing_extensions import Literal as _Literal, Self as _Self
 
@@ -48,13 +48,36 @@ __all__ = [
 ]
 
 class pfunc(_Enum):
-    """Acceptable probability function abbreviations."""
+    """Acceptable probability functions."""
+    
     PDF: str = "pdf"
+    PROBABILITY_DENSITY_FUNCTION: str = "pdf"
+    DENSITY_FUNCTION: str = "pdf"
+    
     PMF: str = "pmf"
+    PROBABILITY_MASS_FUNCTION: str = "pmf"
+    MASS_FUNCTION: str = "pmf"
+    
     CDF: str = "cdf"
+    CUMULATIVE_DISTRIBUTION_FUNCTION: str = "cdf"
+    DISTRIBUTION_FUNCTION: str = "cdf"
+    
     SF : str = "sf"
+    SURVIVAL_FUNCTION: str = "sf"
+    SURVIVOR_FUNCTION: str = "sf"
+    RELIABILITY_FUNCTION: str = "sf"
+    
     PPF: str = "ppf"
+    PERCENT_POINT_FUNCTION: str = "ppf"
+    PERCENTILE_FUNCTION: str = "ppf"
+    QUANTILE_FUNCTION: str = "ppf"
+    INVERSE_CUMULATIVE_DISTRIBUTION_FUNCTION: str = "ppf"
+    INVERSE_DISTRIBUTION_FUNCTION: str = "ppf"
+    
     ISF: str = "isf"
+    INVERSE_SURVIVAL_FUNCTION: str = "isf"
+    INVERSE_SURVIVOR_FUNCTION: str = "isf"
+    INVERSE_RELIABILITY_FUNCTION: str = "isf"
     
 NumericFunction = _Callable[[float], float]
 ProbabilityFunction = _Union[_Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"], pfunc]
@@ -123,31 +146,36 @@ class Distribution(_abc.ABC):
     def mean(self):
         if not hasattr(self, "_mean"):
             self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
+            self._std = self._variance ** 0.5
         return self._mean
     
     @property
     def variance(self):
         if not hasattr(self, "_variance"):
             self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
+            self._std = self._variance ** 0.5
         return self._variance
     
     @property
     def skewness(self):
         if not hasattr(self, "_skewness"):
             self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
+            self._std = self._variance ** 0.5
         return self._skewness
     
     @property
     def kurtosis(self):
         if not hasattr(self, "_kurtosis"):
             self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
+            self._std = self._variance ** 0.5
         return self._kurtosis
     
     @property
     def standard_deviation(self):
-        if not hasattr(self, "_standard_deviation"):
-            self._standard_deviation = self._dist.std()
-        return self._standard_deviation
+        if not hasattr(self, "_std"):
+            self._std = self._dist.std()
+            self._variance = self._std ** 2
+        return self._std
     
     def generate_random_values(self, n: int) -> _np.ndarray:
         """Generate n random values."""
