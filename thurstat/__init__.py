@@ -436,9 +436,9 @@ class DiscreteDistribution(Distribution):
         ----------
         func: NumericFunction
             The function to apply to the distribution.
-        infinity_approximation: Optional[float], default=None
+        infinity_approximation: Optional[int], default=None
             What value to use as an approximation for infinity when the original distribution's support is unbounded and the new distribution's support is not explicitly defined.
-        a, b: Optional[float], default=None
+        a, b: Optional[int], default=None
             What values to use as the support of the new distribution. 
         
         Returns
