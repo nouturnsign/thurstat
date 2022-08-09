@@ -145,37 +145,37 @@ class Distribution(_abc.ABC):
     @property
     def mean(self) -> float:
         if not hasattr(self, "_mean"):
-            self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
-            self._std = self._variance ** 0.5
+            self._mean, self._variance, self._skewness, self._excess_kurtosis = self._dist.stats(moments="mvsk")
+            self._standard_deviation = self._variance ** 0.5
         return self._mean
     
     @property
     def variance(self) -> float:
         if not hasattr(self, "_variance"):
-            self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
-            self._std = self._variance ** 0.5
+            self._mean, self._variance, self._skewness, self._excess_kurtosis = self._dist.stats(moments="mvsk")
+            self._standard_deviation = self._variance ** 0.5
         return self._variance
     
     @property
     def skewness(self) -> float:
         if not hasattr(self, "_skewness"):
-            self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
-            self._std = self._variance ** 0.5
+            self._mean, self._variance, self._skewness, self._excess_kurtosis = self._dist.stats(moments="mvsk")
+            self._standard_deviation = self._variance ** 0.5
         return self._skewness
     
     @property
-    def kurtosis(self) -> float:
-        if not hasattr(self, "_kurtosis"):
-            self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
-            self._std = self._variance ** 0.5
-        return self._kurtosis
+    def excess_kurtosis(self) -> float:
+        if not hasattr(self, "_excess_kurtosis"):
+            self._mean, self._variance, self._skewness, self._excess_kurtosis = self._dist.stats(moments="mvsk")
+            self._standard_deviation = self._variance ** 0.5
+        return self._excess_kurtosis
     
     @property
     def standard_deviation(self) -> float:
-        if not hasattr(self, "_std"):
-            self._std = self._dist.std()
-            self._variance = self._std ** 2
-        return self._std
+        if not hasattr(self, "_standard_deviation"):
+            self._standard_deviation = self._dist.std()
+            self._variance = self._standard_deviation ** 2
+        return self._standard_deviation
     
     def generate_random_values(self, n: int) -> _np.ndarray:
         """Generate n random values."""
