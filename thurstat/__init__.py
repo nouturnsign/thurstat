@@ -1150,8 +1150,9 @@ class ExponentialDistribution(ContinuousDistribution):
     """An exponential continuous random variable"""
     
     options = [
-        ["loc","scale"]
+        ["loc", "scale"],
     ]
+    
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
@@ -1166,6 +1167,7 @@ class FDistribution(ContinuousDistribution):
         ["df1", "df2"],
         ["d1", "d2"],
     ]
+    
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "dfn" in parameters and "dfd" in parameters:
             dfn = parameters.pop("dfn")
@@ -1182,7 +1184,7 @@ class NormalDistribution(ContinuousDistribution):
     """A normal continuous random variable"""
     
     options = [
-        ["loc","scale"]
+        ["loc", "scale"],
     ]
     
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
@@ -1195,8 +1197,10 @@ class TDistribution(ContinuousDistribution):
     """A Student's continuous t random variable"""
     
     options = [
-        ["v","df"]
+        ["v"],
+        ["df"],
     ]
+    
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "df" in parameters:
             df = parameters.pop("df")
