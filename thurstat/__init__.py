@@ -92,7 +92,7 @@ DEFAULTS = {
     "warnings": "default",
 }
 
-def update_defaults(**kwargs):
+def update_defaults(**kwargs) -> None:
     """Update the global defaults."""
     
     DEFAULTS.update(kwargs)
@@ -104,7 +104,7 @@ def update_defaults(**kwargs):
 class ParameterValidationError(Exception):
     """Raised when an invalid set of parameters are used to instantiate a `Distribution`."""
     
-    def __init__(self, given: _List[str], options: _Optional[_List[_List[str]]]=None):
+    def __init__(self, given: _List[str], options: _Optional[_List[_List[str]]]=None) -> None:
         """Create the error with the given parameters and optional parameters."""
         message = f"Failed to validate parameters. Given: {given}."
         if options is not None:
@@ -131,47 +131,47 @@ class Distribution(_abc.ABC):
         pass
     
     @property
-    def support(self):
+    def support(self) -> _portion.Interval:
         if not hasattr(self, "_support"):
             self._support = _portion.closed(*self._dist.support())
         return self._support
     
     @property
-    def median(self):
+    def median(self) -> float:
         if not hasattr(self, "_median"):
             self._median = self._dist.median()
         return self._median
     
     @property
-    def mean(self):
+    def mean(self) -> float:
         if not hasattr(self, "_mean"):
             self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
             self._std = self._variance ** 0.5
         return self._mean
     
     @property
-    def variance(self):
+    def variance(self) -> float:
         if not hasattr(self, "_variance"):
             self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
             self._std = self._variance ** 0.5
         return self._variance
     
     @property
-    def skewness(self):
+    def skewness(self) -> float:
         if not hasattr(self, "_skewness"):
             self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
             self._std = self._variance ** 0.5
         return self._skewness
     
     @property
-    def kurtosis(self):
+    def kurtosis(self) -> float:
         if not hasattr(self, "_kurtosis"):
             self._mean, self._variance, self._skewness, self._kurtosis = self._dist.stats(moments="mvsk")
             self._std = self._variance ** 0.5
         return self._kurtosis
     
     @property
-    def standard_deviation(self):
+    def standard_deviation(self) -> float:
         if not hasattr(self, "_std"):
             self._std = self._dist.std()
             self._variance = self._std ** 2
@@ -1152,7 +1152,7 @@ class ExponentialDistribution(ContinuousDistribution):
     options = [
         ["loc","scale"]
     ]
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
@@ -1185,7 +1185,7 @@ class NormalDistribution(ContinuousDistribution):
         ["loc","scale"]
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
@@ -1197,7 +1197,7 @@ class TDistribution(ContinuousDistribution):
     options = [
         ["v","df"]
     ]
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Union[_stats.rv_continuous, _stats.rv_discrete, None]:
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "df" in parameters:
             df = parameters.pop("df")
         elif "v" in parameters:
