@@ -1073,17 +1073,17 @@ class CauchyDistribution(ContinuousDistribution):
     """A Cauchy distribution."""
     
     options = [
-        ["x0", "gamma"],
         ["loc", "scale"],
+        ["x0", "gamma"],
     ]
     
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
-        if "x0" in parameters and "gamma" in parameters:
-            loc = parameters.pop("x0")
-            scale = parameters.pop("gamma")
-        elif "loc" in parameters and "scale" in parameters:
+        if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
+        elif "x0" in parameters and "gamma" in parameters:
+            loc = parameters.pop("x0")
+            scale = parameters.pop("gamma")
         return _stats.cauchy(loc, scale)
 
 class ChiDistribution(ContinuousDistribution):
@@ -1120,44 +1120,39 @@ class CosineDistribution(ContinuousDistribution):
     """A cosine approximation to the normal distribution."""
     
     options = [
-        ["loc", "scale"]
+        ["loc", "scale"],
+        ["mu", "s"],
     ]
     
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
+        elif "mu" in parameters and "s" in parameters:
+            loc = parameters.pop("mu")
+            scale = parameters.pop("s")
         return _stats.cosine(loc, scale)
-    
-class UniformContinuousDistribution(ContinuousDistribution):
-    """A uniform continuous distribution."""
-    
-    options = [
-        ["a", "b"], 
-        ["loc", "scale"],
-    ]
-    
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
-        if "a" in parameters and "b" in parameters:
-            loc = parameters.pop("a")
-            scale = parameters.pop("b") - loc
-        elif "loc" in parameters and "scale" in parameters:
-            loc = parameters.pop("loc")
-            scale = parameters.pop("scale")
-        return _stats.uniform(loc, scale)
 
 class ExponentialDistribution(ContinuousDistribution):
-    """An exponential continuous random variable"""
+    """An exponential continuous random variable."""
     
     options = [
         ["loc", "scale"],
+        ["beta"],
+        ["lambda_"],
     ]
     
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
-        return _stats.expon(loc,scale)
+        elif "beta" in parameters:
+            loc = 0
+            scale = parameters.pop("beta")
+        elif "lambda_" in parameters:
+            loc = 0
+            scale = parameters.pop("lambda_")
+        return _stats.expon(loc, scale)
 
 class FDistribution(ContinuousDistribution):
     """An F continuous random variable"""
@@ -1185,25 +1180,54 @@ class NormalDistribution(ContinuousDistribution):
     
     options = [
         ["loc", "scale"],
+        ["mu", "sigma"],
+        ["mean", "variance"],
+        ["mu", "tau"],
     ]
     
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
+        elif "mu" in parameters:
+            loc = parameters.pop("mu")
+            if "sigma" in parameters:
+                scale = parameters.pop("sigma")
+            elif "tau" in parameters:
+                scale = 1 / _np.sqrt(parameters.pop("tau"))
+        elif "mean" in parameters and "variance" in parameters:
+            loc = parameters.pop("mean")
+            scale = _np.sqrt(parameters.pop("variance"))        
         return _stats.norm(loc,scale)
 
 class TDistribution(ContinuousDistribution):
     """A Student's continuous t random variable"""
     
     options = [
-        ["v"],
+        ["nu"],
         ["df"],
     ]
     
     def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
         if "df" in parameters:
             df = parameters.pop("df")
-        elif "v" in parameters:
-            df = parameters.pop("v")
+        elif "nu" in parameters:
+            df = parameters.pop("nu")
         return _stats.t(df)
+    
+class UniformContinuousDistribution(ContinuousDistribution):
+    """A uniform continuous distribution."""
+    
+    options = [
+        ["a", "b"], 
+        ["loc", "scale"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+        if "a" in parameters and "b" in parameters:
+            loc = parameters.pop("a")
+            scale = parameters.pop("b") - loc
+        elif "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        return _stats.uniform(loc, scale)
