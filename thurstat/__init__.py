@@ -121,7 +121,7 @@ class Distribution(_abc.ABC):
         given = list(parameters.keys())
         try:
             self._dist = self.interpret_parameterization(parameters)
-        except UnboundLocalError:
+        except (UnboundLocalError, ParameterValidationError):
             raise ParameterValidationError(given, self.options)
         if len(parameters) > 0:
             raise ParameterValidationError(given, self.options)
