@@ -119,6 +119,7 @@ def update_defaults(**kwargs) -> None:
     Notes
     -----
     As an example for the seeds, setting local seed will mean that calling `generate_random_values` on a distribution will result in the same sequence of values. Setting global seed will mean that calling `generate_random_values` on a distribution will start from the same sequence of values but keep progressing through the seed.
+    Using an invalid keyword will not raise an error; make sure to spell correctly.
     """
     
     DEFAULTS.update(kwargs)
