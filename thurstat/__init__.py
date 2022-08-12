@@ -93,7 +93,33 @@ DEFAULTS = {
 }
 
 def update_defaults(**kwargs) -> None:
-    """Update the global defaults."""
+    """
+    Update the global defaults.
+    
+    Parameters
+    ----------
+    infinity_approximation: float
+        Large enough to be considered a finite infinity, defaults to `1e6`
+    exact: bool
+        Whether or not to use approximations in continuous random variable arithmetic, defaults to `False`
+    ratio: int
+        The ratio of points plotted to distance between endpoints when displaying, defaults to `200`
+    default_color: str
+        default matplotlib color to be used when plotting, defaults to `"C0"`
+    local_seed: int
+        The numeric value of the seed when calling any function or None if no local seed, defaults to `None`
+    global_seed: int
+        The numeric value of the seed singleton to be set at the beginning or None if no global seed, defaults to `None`
+    warnings: the warning level to be displayed according to Python's `warning` module, defaults to `default`
+
+    Returns
+    -------
+    None
+    
+    Notes
+    -----
+    As an example for the seeds, setting local seed will mean that calling `generate_random_values` on a distribution will result in the same sequence of values. Setting global seed will mean that calling `generate_random_values` on a distribution will start from the same sequence of values but keep progressing through the seed.
+    """
     
     DEFAULTS.update(kwargs)
     if "global_seed" in kwargs:
@@ -410,7 +436,7 @@ class CustomDistribution(Distribution):
         self._dist = dist
         
     def interpret_parameterization(self) -> None:
-        pass
+        return
     
     @classmethod
     @_abc.abstractmethod
