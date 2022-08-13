@@ -4,8 +4,8 @@ from thurstat import *
 
 update_defaults(warnings="ignore", infinity_approximation=1e3)
 
-k = FormulaVariable()
-x = FormulaVariable()
+k = formula()
+x = formula()
 
 Die = UniformDiscreteDistribution.to_alias("a", "b")
 die1 = Die(1, 6)

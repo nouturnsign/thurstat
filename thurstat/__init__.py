@@ -20,9 +20,7 @@ from scipy.stats._distn_infrastructure import rv_frozen as _rv_frozen
 
 __all__ = [
     # global
-    "pfunc", "update_defaults",
-    # formula
-    "FormulaVariable", "formula",
+    "pfunc", "update_defaults", "formula",
     # base classes
     "Distribution", "DiscreteDistribution", "ContinuousDistribution",
     # custom equivalents of the base classes
@@ -359,8 +357,8 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-class FormulaVariable(object):
-    """A formula-like variable that can be passed as a function."""
+class formula(object):
+    """A formula-like variable that can be passed as a function. Can be used as a decorator on functions."""
     
     def __init__(self, func: _typing.Optional[NumericFunction]=None) -> None:
         """Create a formula variable, optionally with a func. Defaults to the identity function."""
@@ -368,23 +366,28 @@ class FormulaVariable(object):
             func = lambda x: x
         self.func = func
            
-    def __call__(self, other: _Self) -> float:
-        return self.func(other)
+    def __call__(self, other: T) -> T:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(other(x)))
+        elif isinstance(other, Distribution):
+            return other.apply_func(self.func)
+        else:
+            return self.func(other)
     
     def __add__(self, other: float) -> _Self: 
-        return FormulaVariable(lambda x: self.func(x) + other)
+        return formula(lambda x: self.func(x) + other)
     
     def __radd__(self, other: float) -> _Self: 
         return self + other
     
     def __sub__(self, other: float) -> _Self:
-        return FormulaVariable(lambda x: self.func(x) - other) 
+        return formula(lambda x: self.func(x) - other) 
     
     def __rsub__(self, other: float) -> _Self:
-        return FormulaVariable(lambda x: other - self.func(x)) 
+        return formula(lambda x: other - self.func(x)) 
     
     def __mul__(self, other: float) -> _Self: 
-        return FormulaVariable(lambda x: self.func(x) * other)
+        return formula(lambda x: self.func(x) * other)
     
     def __rmul__(self, other: float) -> _Self: 
         return self * other
@@ -393,33 +396,16 @@ class FormulaVariable(object):
         return self * -1
     
     def __truediv__(self, other: float) -> _Self:
-        return FormulaVariable(lambda x: self.func(x) / other)
+        return formula(lambda x: self.func(x) / other)
     
     def __rtruediv__(self, other: float) -> _Self:
-        return FormulaVariable(lambda x: other / self.func(x))
+        return formula(lambda x: other / self.func(x))
     
     def __pow__(self, other: float) -> _Self:
-        return FormulaVariable(lambda x: self.func(x) ** other)
+        return formula(lambda x: self.func(x) ** other)
         
     def __rpow__(self, other: float) -> _Self:
-        return FormulaVariable(lambda x: other ** self.func(x))
-    
-class formula(object):
-    """Decorator for converting functions to formulas. Formulas can be applied to numbers, formula variables, and distributions."""
-    
-    def __init__(self, func: NumericFunction) -> None:
-        """Convert func to a formula."""
-        self.func = func
-        
-    def __call__(self, other: T) -> T:
-        if isinstance(other, (int, float)):
-            return self.func(other)
-        elif isinstance(other, FormulaVariable):
-            return FormulaVariable(lambda x: self.func(other(x)))
-        elif isinstance(other, Distribution):
-            return other.apply_func(self.func)
-        else:
-            raise TypeError(f"Formulas cannot be called on objects of class {type(other)}.")
+        return formula(lambda x: other ** self.func(x))
     
 class CustomDistribution(Distribution):
     """The base class for custom distributions, defined by a scipy rv. Do not instantiate this class."""
