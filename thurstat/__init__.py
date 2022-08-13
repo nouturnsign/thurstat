@@ -2,17 +2,10 @@ from __future__ import annotations as _annotations
 
 import abc as _abc
 import operator as _operator
+import typing as _typing
 import warnings as _warnings
 from enum import Enum as _Enum
 from types import BuiltinFunctionType as _BuiltinFunctionType
-from typing import (
-    Callable as _Callable, 
-    Dict as _Dict, 
-    List as _List, 
-    Optional as _Optional, 
-    Type as _Type, 
-    Union as _Union,
-)
 from typing_extensions import Literal as _Literal, Self as _Self
 
 import matplotlib.pyplot as _plt
@@ -78,9 +71,10 @@ class pfunc(_Enum):
     INVERSE_SURVIVAL_FUNCTION: str = "isf"
     INVERSE_SURVIVOR_FUNCTION: str = "isf"
     INVERSE_RELIABILITY_FUNCTION: str = "isf"
-    
-NumericFunction = _Callable[[float], float]
-ProbabilityFunction = _Union[_Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"], pfunc]
+
+T = _typing.TypeVar('T')
+NumericFunction = _typing.Callable[[float], float]
+ProbabilityFunction = _typing.Union[_Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"], pfunc]
 
 DEFAULTS = {
     "infinity_approximation": 1e6,
@@ -131,7 +125,7 @@ def update_defaults(**kwargs) -> None:
 class ParameterValidationError(Exception):
     """Raised when an invalid set of parameters are used to instantiate a `Distribution`."""
     
-    def __init__(self, given: _List[str], options: _Optional[_List[_List[str]]]=None) -> None:
+    def __init__(self, given: _typing.List[str], options: _typing.Optional[_typing.List[_typing.List[str]]]=None) -> None:
         """Create the error with the given parameters and optional parameters."""
         message = f"Failed to validate parameters. Given: {given}."
         if options is not None:
@@ -141,7 +135,7 @@ class ParameterValidationError(Exception):
 class Distribution(_abc.ABC):
     """The base class for a distribution. Do not instantiate this class."""
     
-    options: _Optional[_List[_List[str]]]
+    options: _typing.Optional[_typing.List[_typing.List[str]]]
     
     def __init__(self, **parameters: float) -> None:
         """Create an independent random variable given the parameters as named keyword arguments."""
@@ -154,7 +148,7 @@ class Distribution(_abc.ABC):
             raise ParameterValidationError(given, self.options)
     
     @_abc.abstractmethod  
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _Optional[_rv_frozen]:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _typing.Optional[_rv_frozen]:
         pass
     
     @property
@@ -232,7 +226,7 @@ class Distribution(_abc.ABC):
             pfunc = pfunc.value
         return getattr(self._dist, pfunc)(at)
     
-    def expected_value(self, func: _Optional[NumericFunction]=None) -> float:
+    def expected_value(self, func: _typing.Optional[NumericFunction]=None) -> float:
         """
         Get the expected value of a function on the distribution.
         
@@ -265,45 +259,45 @@ class Distribution(_abc.ABC):
         pass
     
     @_abc.abstractmethod
-    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> _Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
+    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> _typing.Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
         pass
     
     @_abc.abstractmethod
-    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _Optional[str]=None, **kwargs) -> None:
+    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _typing.Optional[str]=None, **kwargs) -> None:
         pass
     
     @_abc.abstractmethod
-    def apply_infix_operator(self, other: _Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
+    def apply_infix_operator(self, other: _typing.Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
         pass
     
-    def __add__(self, other: _Union[float, _Self]) -> _Self: 
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self: 
         return self.apply_infix_operator(other, _operator.add, _operator.sub)
 
-    def __radd__(self, other: _Union[float, _Self]) -> _Self: 
+    def __radd__(self, other: _typing.Union[float, _Self]) -> _Self: 
         return self + other
     
-    def __sub__(self, other: _Union[float, _Self]) -> _Self:
+    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
         return self.apply_infix_operator(other, _operator.sub, _operator.add)
     
-    def __rsub__(self, other: _Union[float, _Self]) -> _Self:
+    def __rsub__(self, other: _typing.Union[float, _Self]) -> _Self:
         return -(self - other)
     
-    def __mul__(self, other: _Union[float, _Self]) -> _Self: 
+    def __mul__(self, other: _typing.Union[float, _Self]) -> _Self: 
         return self.apply_infix_operator(other, _operator.mul, _operator.truediv)
     
-    def __rmul__(self, other: _Union[float, _Self]) -> _Self: 
+    def __rmul__(self, other: _typing.Union[float, _Self]) -> _Self: 
         return self * other
     
     def __neg__(self) -> _Self:
         return self * -1
     
-    def __truediv__(self, other: _Union[float, _Self]) -> _Self:
+    def __truediv__(self, other: _typing.Union[float, _Self]) -> _Self:
         raise NotImplementedError("Division is currently not implemented for distributions.")
     
-    def __rtruediv__(self, other: _Union[float, _Self]) -> _Self:
+    def __rtruediv__(self, other: _typing.Union[float, _Self]) -> _Self:
         raise NotImplementedError("Division is currently not implemented for distributions.")
     
-    def __pow__(self, other: _Union[float, _Self]) -> _Self:
+    def __pow__(self, other: _typing.Union[float, _Self]) -> _Self:
         if isinstance(other, int) and other > 0:
             if other % 2 == 0:
                 return self.apply_func(lambda x: x ** other, lambda x: x ** (1 / other), lambda x: - (x ** (1 / other)))
@@ -311,12 +305,12 @@ class Distribution(_abc.ABC):
                 return self.apply_func(lambda x: x ** other, lambda x: x ** (1 / other))
         raise NotImplementedError("Exponentiation is currently not implemented between distributions or for non-integer or non-positive powers.")
      
-    def __rpow__(self, other: _Union[float, _Self]) -> _Self:
+    def __rpow__(self, other: _typing.Union[float, _Self]) -> _Self:
         if isinstance(other, int) and other > 0:
             return self.apply_func(lambda x: other ** x, lambda x: _np.log(x) / _np.log(other))
         raise NotImplementedError("Exponentiation is currently not implemented between distributions or for non-integer or non-positive bases.")
     
-    def __lt__(self, other: _Union[float, _Self]) -> Event:        
+    def __lt__(self, other: _typing.Union[float, _Self]) -> Event:        
         if isinstance(other, (int, float)):
             return Event(self, _portion.open(-_np.inf, other))
         elif isinstance(other, Distribution):
@@ -324,7 +318,7 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __le__(self, other: _Union[float, _Self]) -> Event:
+    def __le__(self, other: _typing.Union[float, _Self]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.openclosed(-_np.inf, other))
         elif isinstance(other, Distribution):
@@ -332,7 +326,7 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __gt__(self, other: _Union[float, _Self]) -> Event:
+    def __gt__(self, other: _typing.Union[float, _Self]) -> Event:
             
         if isinstance(other, (int, float)):
             return Event(self, _portion.open(other, _np.inf))
@@ -341,7 +335,7 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __ge__(self, other: _Union[float, _Self]) -> Event:
+    def __ge__(self, other: _typing.Union[float, _Self]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.closedopen(other, _np.inf))
         elif isinstance(other, Distribution):
@@ -349,7 +343,7 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __ne__(self, other: _Union[float, _Self]) -> Event:
+    def __ne__(self, other: _typing.Union[float, _Self]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.open(-_np.inf, other) | _portion.open(other, _np.inf))
         elif isinstance(other, Distribution):
@@ -357,7 +351,7 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __eq__(self, other: _Union[float, _Self]) -> Event:
+    def __eq__(self, other: _typing.Union[float, _Self]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.singleton(other))
         elif isinstance(other, Distribution):
@@ -368,13 +362,13 @@ class Distribution(_abc.ABC):
 class FormulaVariable(object):
     """A formula-like variable that can be passed as a function."""
     
-    def __init__(self, func: _Optional[NumericFunction]=None) -> None:
+    def __init__(self, func: _typing.Optional[NumericFunction]=None) -> None:
         """Create a formula variable, optionally with a func. Defaults to the identity function."""
         if func is None:
             func = lambda x: x
         self.func = func
            
-    def __call__(self, other: _Self) -> NumericFunction:
+    def __call__(self, other: _Self) -> float:
         return self.func(other)
     
     def __add__(self, other: float) -> _Self: 
@@ -417,7 +411,7 @@ class formula(object):
         """Convert func to a formula."""
         self.func = func
         
-    def __call__(self, other: _Union[float, FormulaVariable, Distribution]) -> _Union[float, FormulaVariable, Distribution]:
+    def __call__(self, other: T) -> T:
         if isinstance(other, (int, float)):
             return self.func(other)
         elif isinstance(other, FormulaVariable):
@@ -441,7 +435,7 @@ class CustomDistribution(Distribution):
     
     @classmethod
     @_abc.abstractmethod
-    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> _Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
+    def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> _typing.Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
         pass
     
 class DiscreteDistribution(Distribution):
@@ -455,7 +449,7 @@ class DiscreteDistribution(Distribution):
         """Calculate the probability P(X == k)."""
         return self.evaluate("pmf", k)
     
-    def apply_func(self, func: NumericFunction, *, infinity_approximation: _Optional[int]=None, a: _Optional[int]=None, b: _Optional[int]=None) -> CustomDiscreteDistribution:
+    def apply_func(self, func: NumericFunction, *, infinity_approximation: _typing.Optional[int]=None, a: _typing.Optional[int]=None, b: _typing.Optional[int]=None) -> CustomDiscreteDistribution:
         """
         Apply a function to the distribution to create a new distribution.
         
@@ -502,7 +496,7 @@ class DiscreteDistribution(Distribution):
         
         return CustomDiscreteDistribution.from_pfunc("pmf", _np.vectorize(lambda a: pmf.get(a, 0)), a, b)
     
-    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _Optional[str]=None, **kwargs) -> None:
+    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _typing.Optional[str]=None, **kwargs) -> None:
         """
         Display a probability function.
         
@@ -536,7 +530,7 @@ class DiscreteDistribution(Distribution):
         if not add:
             _plt.show()
 
-    def apply_infix_operator(self, other: _Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType = None) -> _Self:
+    def apply_infix_operator(self, other: _typing.Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType = None) -> _Self:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
@@ -606,7 +600,7 @@ class ContinuousDistribution(Distribution):
         _warnings.warn("Trying to calculate the point probability of a continuous distribution.")
         return 0
     
-    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: _Optional[float]=None, a: _Optional[float]=None, b: _Optional[float]=None) -> CustomContinuousDistribution:
+    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: _typing.Optional[float]=None, a: _typing.Optional[float]=None, b: _typing.Optional[float]=None) -> CustomContinuousDistribution:
         """
         Apply a function to the distribution to create a new distribution.
         
@@ -654,7 +648,7 @@ class ContinuousDistribution(Distribution):
             _warnings.warn("Multiple branched inverse functions are currently questionably implemented. Use 1 to 1 functions when possible.")
             return CustomContinuousDistribution.from_pfunc("pdf", lambda y: sum(self.evaluate("pdf", inverse_func(y)) * _np.absolute(_derivative(inverse_func, y, dx=1 / infinity_approximation)) for inverse_func in inverse_funcs), a=a, b=b)
     
-    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _Optional[str]=None, **kwargs) -> None:
+    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _typing.Optional[str]=None, **kwargs) -> None:
         """
         Display a probability function.
         
@@ -692,7 +686,7 @@ class ContinuousDistribution(Distribution):
         """Approximate the continuous distribution with a discrete distribution."""
         return CustomDiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
     
-    def apply_infix_operator(self, other: _Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
+    def apply_infix_operator(self, other: _typing.Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
@@ -767,7 +761,7 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
 class Alias(object):
     """An alias for a distribution given the parameter convention."""
     
-    def __init__(self, tdist: _Type[Distribution], *interpret_parameters: str) -> None:
+    def __init__(self, tdist: _typing.Type[Distribution], *interpret_parameters: str) -> None:
         """Create an alias given the class of distribution and parameter names in the order they will be passed."""
         self._tdist = tdist
         self._interpret_parameters = interpret_parameters
@@ -827,7 +821,7 @@ class BernoulliDistribution(DiscreteDistribution):
         ["q"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "p" in parameters:
             p = parameters.pop("p")
         elif "q" in parameters:
@@ -842,7 +836,7 @@ class BetaBinomialDistribution(DiscreteDistribution):
         ["n", "alpha", "beta"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "n" in parameters:
             n = parameters.pop("n")
             if "a" in parameters and "b" in parameters:
@@ -861,7 +855,7 @@ class BinomialDistribution(DiscreteDistribution):
         ["n", "q"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "n" in parameters:
             n = parameters.pop("n")
             if "p" in parameters:
@@ -878,7 +872,7 @@ class GeometricDistribution(DiscreteDistribution):
         ["q"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "p" in parameters:
             p = parameters.pop("p")
         elif "q" in parameters:
@@ -896,7 +890,7 @@ class HypergeometricDistribution(DiscreteDistribution):
         ["N1", "N2", "n"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "M" in parameters and "n" in parameters and "N" in parameters:
             M = parameters.pop("M")
             n = parameters.pop("n")
@@ -932,7 +926,7 @@ class NegativeBinomialDistribution(DiscreteDistribution):
         ["mu", "alpha"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "mean" in parameters and "variance" in parameters:
             mean = parameters.pop("mean")
             variance = parameters.pop("variance")
@@ -978,7 +972,7 @@ class NegativeHypergeometricDistribution(DiscreteDistribution):
         ["N1", "N2", "r"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "r" in parameters:
             r = parameters.pop("r")
             if "M" in parameters and "n" in parameters:
@@ -1007,7 +1001,7 @@ class PoissonDistribution(DiscreteDistribution):
         ["r", "t"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "mu" in parameters:
             mu = parameters.pop("mu")
         elif "lambda_" in parameters:
@@ -1023,7 +1017,7 @@ class SkellamDistribution(DiscreteDistribution):
         ["mu1", "mu2"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "mu1" in parameters and "mu2" in parameters:
             mu1 = parameters.pop("mu1")
             mu2 = parameters.pop("mu2")
@@ -1037,7 +1031,7 @@ class UniformDiscreteDistribution(DiscreteDistribution):
         ["low", "high"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "a" in parameters and "b" in parameters:
             low = parameters.pop("a")
             high = parameters.pop("b") + 1
@@ -1055,7 +1049,7 @@ class YuleSimonDistribution(DiscreteDistribution):
         ["a"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "alpha" in parameters:
             alpha = parameters.pop("alpha")
         elif "rho" in parameters:
@@ -1072,7 +1066,7 @@ class ZipfDistribution(DiscreteDistribution):
         ["s"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "a" in parameters:
             a = parameters.pop("a")
         elif "s" in parameters:
@@ -1087,7 +1081,7 @@ class ZipfianDistribution(DiscreteDistribution):
         ["s", "N"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "a" in parameters and "n" in parameters:
             a = parameters.pop("a")
             n = parameters.pop("n")
@@ -1104,7 +1098,7 @@ class CauchyDistribution(ContinuousDistribution):
         ["x0", "gamma"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
@@ -1121,7 +1115,7 @@ class ChiDistribution(ContinuousDistribution):
         ["df"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "df" in parameters:
             df = parameters.pop("df")
         elif "k" in parameters:
@@ -1136,7 +1130,7 @@ class ChiSquaredDistribution(ContinuousDistribution):
         ["df"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "df" in parameters:
             df = parameters.pop("df")
         elif "k" in parameters:
@@ -1151,7 +1145,7 @@ class CosineDistribution(ContinuousDistribution):
         ["mu", "s"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
@@ -1169,7 +1163,7 @@ class ExponentialDistribution(ContinuousDistribution):
         ["lambda_"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
@@ -1190,7 +1184,7 @@ class FDistribution(ContinuousDistribution):
         ["d1", "d2"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "dfn" in parameters and "dfd" in parameters:
             dfn = parameters.pop("dfn")
             dfd = parameters.pop("dfd")
@@ -1212,7 +1206,7 @@ class NormalDistribution(ContinuousDistribution):
         ["mu", "tau"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
@@ -1235,7 +1229,7 @@ class TDistribution(ContinuousDistribution):
         ["df"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "df" in parameters:
             df = parameters.pop("df")
         elif "nu" in parameters:
@@ -1250,7 +1244,7 @@ class UniformContinuousDistribution(ContinuousDistribution):
         ["loc", "scale"],
     ]
     
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> _rv_frozen:
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "a" in parameters and "b" in parameters:
             loc = parameters.pop("a")
             scale = parameters.pop("b") - loc
