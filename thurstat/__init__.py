@@ -1232,7 +1232,13 @@ class ChiSquaredDistribution(ContinuousDistribution):
             df = parameters.pop("df")
         elif "k" in parameters:
             df = parameters.pop("k")
+        self.df = df
         return _stats.chi2(df)
+    
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, ChiSquaredDistribution):
+            return ChiSquaredDistribution(df=self.df + other.df)
+        return super().__add__(other)
 
 class CosineDistribution(ContinuousDistribution):
     """A cosine approximation to the normal distribution."""
@@ -1277,6 +1283,13 @@ class ErlangDistribution(ContinuousDistribution):
         self.k = k
         self.beta = beta
         return _stats.erlang(k, scale=1 / beta)
+    
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, ErlangDistribution) and self.beta == other.beta:
+            return ErlangDistribution(a=self.k + other.k, beta=self.beta)
+        if isinstance(other, GammaDistribution) and self.beta == other.beta:
+            return GammaDistribution(alpha=self.k + other.k, beta=self.beta)
+        return super().__add__(other)
 
 class ExponentialDistribution(ContinuousDistribution):
     """An exponential continuous random variable."""
@@ -1342,6 +1355,16 @@ class GammaDistribution(ContinuousDistribution):
         self.k = k
         self.beta = beta
         return _stats.gamma(k, scale=1 / beta)
+    
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, (ErlangDistribution, GammaDistribution)) and self.beta == other.beta:
+            return GammaDistribution(alpha=self.k + other.k, beta=self.beta)
+        return super().__add__(other)
+    
+    def __truediv__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, (ErlangDistribution, GammaDistribution)) and self.beta == other.beta:
+            return BetaPrimeDistribution(self.k, other.k)
+        return super().__truediv__(other)
     
 class GompertzDistribution(ContinuousDistribution):
     """A Gompertz distribution."""
@@ -1417,7 +1440,14 @@ class NormalDistribution(ContinuousDistribution):
         elif "mean" in parameters and "variance" in parameters:
             loc = parameters.pop("mean")
             scale = _np.sqrt(parameters.pop("variance"))
+        self.mu = loc
+        self.sigma = scale
         return _stats.norm(loc,scale)
+    
+    def __truediv__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, NormalDistribution) and self.mu == 0 and other.mu == 0 and self.sigma == 1 and other.sigma == 1:
+            return CauchyDistribution(x0=0, gamma=1)
+        return super().__truediv__(other)
 
 class TDistribution(ContinuousDistribution):
     """A Student's continuous t random variable"""
