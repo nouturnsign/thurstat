@@ -56,7 +56,11 @@ To get probability functions, use the enum `pfunc` e.g. `pfunc.PDF`. Alternative
 ### Predefined continuous distributions
 
 ```py
-["UniformContinuousDistribution", "CauchyDistribution"] # outdated, needs update
+[    "BetaDistribution", "BetaPrimeDistribution", "CauchyDistribution", "ChiDistribution", 
+    "ChiSquaredDistribution", "CosineDistribution", "ErlangDistribution", "ExponentialDistribution", 
+    "FDistribution", "GammaDistribution", "GompertzDistribution", "LaplaceDistribution", 
+    "LogisticDistribution", "NormalDistribution", "TDistribution", "TrapezoidalDistribution",
+    "TriangularDistribution", "UniformContinuousDistribution", "WeibullDistribution"]
 ```
 
 ### Creating distribution objects

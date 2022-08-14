@@ -33,9 +33,11 @@ __all__ = [
     "NegativeHypergeometricDistribution", "PoissonDistribution", "SkellamDistribution",
     "UniformDiscreteDistribution", "YuleSimonDistribution", "ZipfDistribution", "ZipfianDistribution",
     # predefined continuous distributions
-    "CauchyDistribution", "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution",
-    "ExponentialDistribution", "FDistribution", "NormalDistribution", "TDistribution",
-    "UniformContinuousDistribution",
+    "BetaDistribution", "BetaPrimeDistribution", "CauchyDistribution", "ChiDistribution", 
+    "ChiSquaredDistribution", "CosineDistribution", "ErlangDistribution", "ExponentialDistribution", 
+    "FDistribution", "GammaDistribution", "GompertzDistribution", "LaplaceDistribution", 
+    "LogisticDistribution", "NormalDistribution", "TDistribution", "TrapezoidalDistribution",
+    "TriangularDistribution", "UniformContinuousDistribution", "WeibullDistribution",
 ]
 
 class pfunc(_Enum):
