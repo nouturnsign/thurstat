@@ -42,7 +42,7 @@ Throughout, probability function will often be abbreviated as `pfunc`, function 
 
 ### Useful constants
 
-To get probability functions, use `pfunc` with dot accessor. e.g. `pfunc.PDF`. Alternatively, use the commonly accepted abbreviation according to `scipy.stats`.
+To get probability functions, use the enum `pfunc` e.g. `pfunc.PDF`. Alternatively, use the commonly accepted abbreviation according to `scipy.stats` e.g. `"pdf"`.
 
 ### Predefined discrete distributions
 
@@ -63,7 +63,7 @@ To get probability functions, use `pfunc` with dot accessor. e.g. `pfunc.PDF`. A
 
 When creating a new distribution, each distribution is assumed to be independent. 
 
-Use common names for parameters; all parameters must be named. Any parameters that are keywords (e.g. lambda) should be appended with an underscore (e.g. lambda_). Any parameters with subscripts (x_0) should be input without an underscore in between the variable name and subscript (e.g. x0). Parameters with superscripts (e.g. sigma^2) are not accepted; other names in place of these superscript parameters should be (e.g. variance). If the parameters are invalid, a `ParameterValidationError` will be raised, and should display acceptable options. When in doubt, consult `scipy.stats` or Wikipedia. 
+Use common names for parameters; all parameters must be named. Any parameters that are keywords (e.g. lambda) should be appended with an underscore (e.g. lambda_). Any parameters with subscripts (x_0) should be input without an underscore in between the variable name and subscript (e.g. x0). Parameters with superscripts (e.g. sigma^2) are not accepted; other names in place of these superscript parameters might be (e.g. variance). If the parameters are invalid, a `ParameterValidationError` will be raised, and should display acceptable options. When in doubt, consult `scipy.stats` or Wikipedia. 
 
 ### Useful attributes
 
@@ -104,8 +104,9 @@ from_pfunc(pfunc, func, a, b)
 
 ```
 formula()
+...Distribution(**parameters)
 Custom...Distribution(dist)
-Alias(tdist, *interpret_parameters)
+Alias(Type[tdist], *interpret_parameters)
 Event(tdist, interval)
 ```
 
@@ -146,6 +147,8 @@ class CauchyDistribution(ContinuousDistribution):
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
         return scipy.stats.cauchy(loc, scale)
+
+X = CauchyDistribution(x0=0, gamma=1)
 ```
 
 ### Apply function
@@ -160,18 +163,20 @@ Z = UniformContinuousDistribution(a=0, b=1).apply_func(abs, lambda x: x, lambda 
 
 ### formula
 
-Write formulas without lambda expressions with formula-like notation.
+Write formulas without lambda expressions with formula-like notation. Note that formulas are immutable, so modifying formulas creates new formula objects instead of modifying the original object.
 
 e.g.
 ```py
-# using formula constructor and as decorator to create functions
+# using formula constructor, only needed once
 x = formula()
+
+# using decorator to create functions
 @formula
 def sqrt(x):
     return x ** 0.5
 X = CustomContinuousDistribution.from_pfunc("pdf", 1.5 * sqrt(x), a=0, b=1)
 
-# using formula decorator on distributions
+# using formulas on distributions
 @formula
 def square(x):
     return x ** 2
