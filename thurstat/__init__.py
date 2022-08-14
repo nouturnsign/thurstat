@@ -1310,7 +1310,13 @@ class ExponentialDistribution(ContinuousDistribution):
         elif "lambda_" in parameters:
             loc = 0
             scale = parameters.pop("lambda_")
+        self.lambda_ = scale
         return _stats.expon(loc, scale)
+    
+    def __sub__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
+        if isinstance(other, ExponentialDistribution) and self.lambda_ == other.lambda_:
+            return LaplaceDistribution(mu=0, b=1 / self.lambda_)
+        return super().__sub__(other)
 
 class FDistribution(ContinuousDistribution):
     """An F continuous random variable"""
@@ -1331,7 +1337,14 @@ class FDistribution(ContinuousDistribution):
         elif "d1" in parameters and "d2" in parameters:
             dfn = parameters.pop("d1")
             dfd = parameters.pop("d2")
+        self.dfn = dfn
+        self.dfd = dfd
         return _stats.f(dfn, dfd)
+    
+    def __mul__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
+        if other == self.dfn / self.dfd:
+            return BetaPrimeDistribution(a=self.dfn / 2, b=self.dfd / 2)
+        return super().__mul__(other)
     
 class GammaDistribution(ContinuousDistribution):
     """A gamma distribution."""
@@ -1447,6 +1460,16 @@ class NormalDistribution(ContinuousDistribution):
         self.mu = loc
         self.sigma = scale
         return _stats.norm(loc,scale)
+    
+    def __add__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
+        if isinstance(other, NormalDistribution):
+            return NormalDistribution(mean=self.mu + other.mu, variance=self.sigma ** 2 + other.sigma ** 2)
+        return super().__add__(other)
+    
+    def __sub__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
+        if isinstance(other, NormalDistribution):
+            return NormalDistribution(mean=self.mu - other.mu, variance=self.sigma ** 2 + other.sigma ** 2)
+        return super().__add__(other)
     
     def __truediv__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
         if isinstance(other, NormalDistribution) and self.mu == 0 and other.mu == 0 and self.sigma == 1 and other.sigma == 1:
