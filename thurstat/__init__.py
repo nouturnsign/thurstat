@@ -260,7 +260,7 @@ class Distribution(_abc.ABC):
         pass
         
     @_abc.abstractmethod
-    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> _typing.Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
+    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> CustomDistribution:
         pass
         
     @_abc.abstractmethod
@@ -268,37 +268,37 @@ class Distribution(_abc.ABC):
         pass
         
     @_abc.abstractmethod
-    def apply_infix_operator(self, other: _typing.Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
+    def apply_infix_operator(self, other: _typing.Union[float, Distribution], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> Distribution:
         pass
     
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __add__(self, other: _typing.Union[float, Distribution]) -> Distribution:
         return self.apply_infix_operator(other, _operator.add, _operator.sub)
 
-    def __radd__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __radd__(self, other: _typing.Union[float, Distribution]) -> Distribution:
         return self + other
     
-    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __sub__(self, other: _typing.Union[float, Distribution]) -> Distribution:
         return self.apply_infix_operator(other, _operator.sub, _operator.add)
     
-    def __rsub__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __rsub__(self, other: _typing.Union[float, Distribution]) -> Distribution:
         return -(self - other)
     
-    def __mul__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __mul__(self, other: _typing.Union[float, Distribution]) -> Distribution:
         return self.apply_infix_operator(other, _operator.mul, _operator.truediv)
     
-    def __rmul__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __rmul__(self, other: _typing.Union[float, Distribution]) -> Distribution:
         return self * other
     
-    def __neg__(self) -> _Self:
+    def __neg__(self) -> Distribution:
         return self * -1
     
-    def __truediv__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __truediv__(self, other: _typing.Union[float, Distribution]) -> Distribution:
         raise NotImplementedError("Division is currently not implemented for distributions.")
     
-    def __rtruediv__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __rtruediv__(self, other: _typing.Union[float, Distribution]) -> Distribution:
         raise NotImplementedError("Division is currently not implemented for distributions.")
     
-    def __pow__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __pow__(self, other: _typing.Union[float, Distribution]) -> Distribution:
         if isinstance(other, int) and other > 0:
             if other % 2 == 0:
                 return self.apply_func(lambda x: x ** other, lambda x: x ** (1 / other), lambda x: - (x ** (1 / other)))
@@ -306,12 +306,12 @@ class Distribution(_abc.ABC):
                 return self.apply_func(lambda x: x ** other, lambda x: x ** (1 / other))
         raise NotImplementedError("Exponentiation is currently not implemented between distributions or for non-integer or non-positive powers.")
     
-    def __rpow__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __rpow__(self, other: _typing.Union[float, Distribution]) -> Distribution:
         if isinstance(other, int) and other > 0:
             return self.apply_func(lambda x: other ** x, lambda x: _np.log(x) / _np.log(other))
         raise NotImplementedError("Exponentiation is currently not implemented between distributions or for non-integer or non-positive bases.")
     
-    def __lt__(self, other: _typing.Union[float, _Self]) -> Event:
+    def __lt__(self, other: _typing.Union[float, Distribution]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.open(-_np.inf, other))
         elif isinstance(other, Distribution):
@@ -319,7 +319,7 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __le__(self, other: _typing.Union[float, _Self]) -> Event:
+    def __le__(self, other: _typing.Union[float, Distribution]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.openclosed(-_np.inf, other))
         elif isinstance(other, Distribution):
@@ -327,7 +327,7 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __gt__(self, other: _typing.Union[float, _Self]) -> Event:
+    def __gt__(self, other: _typing.Union[float, Distribution]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.open(other, _np.inf))
         elif isinstance(other, Distribution):
@@ -335,7 +335,7 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __ge__(self, other: _typing.Union[float, _Self]) -> Event:
+    def __ge__(self, other: _typing.Union[float, Distribution]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.closedopen(other, _np.inf))
         elif isinstance(other, Distribution):
@@ -343,7 +343,7 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __ne__(self, other: _typing.Union[float, _Self]) -> Event:
+    def __ne__(self, other: _typing.Union[float, Distribution]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.open(-_np.inf, other) | _portion.open(other, _np.inf))
         elif isinstance(other, Distribution):
@@ -351,7 +351,7 @@ class Distribution(_abc.ABC):
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
-    def __eq__(self, other: _typing.Union[float, _Self]) -> Event:
+    def __eq__(self, other: _typing.Union[float, Distribution]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.singleton(other))
         elif isinstance(other, Distribution):
@@ -518,7 +518,7 @@ class DiscreteDistribution(Distribution):
         if not add:
             _plt.show()
 
-    def apply_infix_operator(self, other: _typing.Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType = None) -> _Self:
+    def apply_infix_operator(self, other: _typing.Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType=None) -> _Self:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
@@ -815,7 +815,7 @@ class BernoulliDistribution(DiscreteDistribution):
         self.p = p
         return _stats.bernoulli(p)
     
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __add__(self, other: _typing.Union[float, DiscreteDistribution]) -> DiscreteDistribution:
         if isinstance(other, BernoulliDistribution) and self.p == other.p:
             return BinomialDistribution(n=2, p=self.p)
         if isinstance(other, BinomialDistribution) and self.p == other.p:
@@ -860,14 +860,14 @@ class BinomialDistribution(DiscreteDistribution):
         self.p = p
         return _stats.binom(n, p)
     
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __add__(self, other: _typing.Union[float, DiscreteDistribution]) -> DiscreteDistribution:
         if isinstance(other, BernoulliDistribution) and self.p == other.p:
             return BinomialDistribution(n=self.n + 1, p=self.p)
         if isinstance(other, BinomialDistribution) and self.p == other.p:
             return BinomialDistribution(n=self.n + other.n, p=self.p)
         return super().__add__(other)
     
-    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __sub__(self, other: _typing.Union[float, DiscreteDistribution]) -> DiscreteDistribution:
         if isinstance(other, BernoulliDistribution) and self.p == other.p:
             return BinomialDistribution(n=self.n - 1, p=self.p)
         if isinstance(other, BinomialDistribution) and self.p == other.p:
@@ -890,7 +890,7 @@ class GeometricDistribution(DiscreteDistribution):
         self. p =p
         return _stats.geom(p)
     
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __add__(self, other: _typing.Union[float, DiscreteDistribution]) -> DiscreteDistribution:
         if isinstance(other, GeometricDistribution) and self.p == other.p:
             return NegativeBinomialDistribution(n=2, p=self.p)
         if isinstance(other, NegativeBinomialDistribution) and self.p == other.p:
@@ -981,14 +981,14 @@ class NegativeBinomialDistribution(DiscreteDistribution):
         self.p = p
         return _stats.nbinom(n, p)
     
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __add__(self, other: _typing.Union[float, DiscreteDistribution]) -> DiscreteDistribution:
         if isinstance(other, GeometricDistribution) and self.p == other.p:
             return NegativeBinomialDistribution(n=self.n + 1, p=self.p)
         if isinstance(other, NegativeBinomialDistribution) and self.p == other.p:
             return NegativeBinomialDistribution(n=self.n + other.n, p=self.p)
         return super().__add__(other)
     
-    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __sub__(self, other: _typing.Union[float, DiscreteDistribution]) -> DiscreteDistribution:
         if isinstance(other, GeometricDistribution) and self.p == other.p:
             return NegativeBinomialDistribution(n=self.n - 1, p=self.p)
         if isinstance(other, NegativeBinomialDistribution) and self.p == other.p:
@@ -1045,12 +1045,12 @@ class PoissonDistribution(DiscreteDistribution):
         self.mu = mu
         return _stats.poisson(mu)
     
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __add__(self, other: _typing.Union[float, DiscreteDistribution]) -> DiscreteDistribution:
         if isinstance(other, PoissonDistribution):
             return PoissonDistribution(mu=self.mu + other.mu)
         return super().__add__(other)
     
-    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __sub__(self, other: _typing.Union[float, DiscreteDistribution]) -> DiscreteDistribution:
         if isinstance(other, PoissonDistribution):
             return SkellamDistribution(mu1=self.mu, mu2=other.mu)
         return super().__sub__(other)
@@ -1235,7 +1235,7 @@ class ChiSquaredDistribution(ContinuousDistribution):
         self.df = df
         return _stats.chi2(df)
     
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __add__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
         if isinstance(other, ChiSquaredDistribution):
             return ChiSquaredDistribution(df=self.df + other.df)
         return super().__add__(other)
@@ -1284,7 +1284,7 @@ class ErlangDistribution(ContinuousDistribution):
         self.beta = beta
         return _stats.erlang(k, scale=1 / beta)
     
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __add__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
         if isinstance(other, ErlangDistribution) and self.beta == other.beta:
             return ErlangDistribution(a=self.k + other.k, beta=self.beta)
         if isinstance(other, GammaDistribution) and self.beta == other.beta:
@@ -1356,12 +1356,12 @@ class GammaDistribution(ContinuousDistribution):
         self.beta = beta
         return _stats.gamma(k, scale=1 / beta)
     
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __add__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
         if isinstance(other, (ErlangDistribution, GammaDistribution)) and self.beta == other.beta:
             return GammaDistribution(alpha=self.k + other.k, beta=self.beta)
         return super().__add__(other)
     
-    def __truediv__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __truediv__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
         if isinstance(other, (ErlangDistribution, GammaDistribution)) and self.beta == other.beta:
             return BetaPrimeDistribution(self.k, other.k)
         return super().__truediv__(other)
@@ -1444,7 +1444,7 @@ class NormalDistribution(ContinuousDistribution):
         self.sigma = scale
         return _stats.norm(loc,scale)
     
-    def __truediv__(self, other: _typing.Union[float, _Self]) -> _Self:
+    def __truediv__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
         if isinstance(other, NormalDistribution) and self.mu == 0 and other.mu == 0 and self.sigma == 1 and other.sigma == 1:
             return CauchyDistribution(x0=0, gamma=1)
         return super().__truediv__(other)
