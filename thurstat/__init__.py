@@ -518,7 +518,7 @@ class DiscreteDistribution(Distribution):
         if not add:
             _plt.show()
 
-    def apply_infix_operator(self, other: _typing.Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType=None) -> _Self:
+    def apply_infix_operator(self, other: _typing.Union[float, DiscreteDistribution], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType=None) -> CustomDiscreteDistribution:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
@@ -673,7 +673,7 @@ class ContinuousDistribution(Distribution):
         """Approximate the continuous distribution with a discrete distribution using the correction for continuity."""
         return CustomDiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
     
-    def apply_infix_operator(self, other: _typing.Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
+    def apply_infix_operator(self, other: _typing.Union[float, ContinuousDistribution], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> CustomContinuousDistribution:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
