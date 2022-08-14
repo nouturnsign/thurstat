@@ -887,7 +887,15 @@ class GeometricDistribution(DiscreteDistribution):
             p = parameters.pop("p")
         elif "q" in parameters:
             p = 1 - parameters.pop("q")
+        self. p =p
         return _stats.geom(p)
+    
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, GeometricDistribution) and self.p == other.p:
+            return NegativeBinomialDistribution(n=2, p=self.p)
+        if isinstance(other, NegativeBinomialDistribution) and self.p == other.p:
+            return NegativeBinomialDistribution(n=1 + other.n, p=self.p)
+        return super().__add__(other)
 
 class HypergeometricDistribution(DiscreteDistribution):
     """A hypergeometric distribution."""
@@ -969,7 +977,23 @@ class NegativeBinomialDistribution(DiscreteDistribution):
                 p = parameters.pop("p")
             elif "q" in parameters:
                 p = 1 - parameters.pop("q")
+        self.n = n
+        self.p = p
         return _stats.nbinom(n, p)
+    
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, GeometricDistribution) and self.p == other.p:
+            return NegativeBinomialDistribution(n=self.n + 1, p=self.p)
+        if isinstance(other, NegativeBinomialDistribution) and self.p == other.p:
+            return NegativeBinomialDistribution(n=self.n + other.n, p=self.p)
+        return super().__add__(other)
+    
+    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, GeometricDistribution) and self.p == other.p:
+            return NegativeBinomialDistribution(n=self.n - 1, p=self.p)
+        if isinstance(other, NegativeBinomialDistribution) and self.p == other.p:
+            return NegativeBinomialDistribution(n=self.n - other.n, p=self.p)
+        return super().__sub__(other)
 
 class NegativeHypergeometricDistribution(DiscreteDistribution):
     """A negative hypergeometric distribution."""
