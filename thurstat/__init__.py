@@ -1185,7 +1185,7 @@ class BetaPrimeDistribution(ContinuousDistribution):
             nu = parameters.pop("nu")
             a = mu * (1 + nu)
             b = 2 + nu
-        return _stats.beta(a, b)
+        return _stats.betaprime(a, b)
 
 class CauchyDistribution(ContinuousDistribution):
     """A Cauchy distribution."""
@@ -1341,7 +1341,7 @@ class GammaDistribution(ContinuousDistribution):
             beta = 1 / parameters.pop("theta")
         self.k = k
         self.beta = beta
-        return _stats.erlang(k, scale=1 / beta)
+        return _stats.gamma(k, scale=1 / beta)
     
 class GompertzDistribution(ContinuousDistribution):
     """A Gompertz distribution."""
