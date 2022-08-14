@@ -78,6 +78,7 @@ DEFAULTS = {
     "infinity_approximation": 1e6,
     "exact": False,
     "ratio": 200,
+    "buffer": 0.2,
     "default_color": "C0",
     "local_seed": None,
     "global_seed": None,
@@ -96,6 +97,8 @@ def update_defaults(**kwargs) -> None:
         Whether or not to use approximations in continuous random variable arithmetic, defaults to `False`
     ratio: int
         The ratio of points plotted to distance between endpoints when displaying, defaults to `200`
+    buffer: float
+        The additional percent of the width to be plotted to both the right and left.
     default_color: str
         default matplotlib color to be used when plotting, defaults to `"C0"`
     local_seed: int
@@ -659,8 +662,7 @@ class ContinuousDistribution(Distribution):
         if b == _np.inf:
             b = self.evaluate("ppf", 1 - 1 / DEFAULTS["infinity_approximation"])
         diff = b - a
-        buffer = 0.2
-        x = _np.linspace(a - diff * buffer, b + diff * buffer, int(diff * DEFAULTS["ratio"]))
+        x = _np.linspace(a - diff * DEFAULTS["buffer"], b + diff * DEFAULTS["buffer"], int(diff * DEFAULTS["ratio"]))
         y = self.evaluate(pfunc, x)
         if color is None:
             color = DEFAULTS["default_color"]
@@ -669,7 +671,7 @@ class ContinuousDistribution(Distribution):
             _plt.show()
     
     def discretize(self) -> DiscreteDistribution:
-        """Approximate the continuous distribution with a discrete distribution."""
+        """Approximate the continuous distribution with a discrete distribution using the correction for continuity."""
         return CustomDiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
     
     def apply_infix_operator(self, other: _typing.Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
