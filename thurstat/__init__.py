@@ -28,12 +28,12 @@ __all__ = [
     # events and probability
     "P", "probability_of",
     # predefined discrete distributions
-    "BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", "BinomialDistribution", 
-    "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", 
-    "NegativeHypergeometricDistribution", "PoissonDistribution", "SkellamDistribution", 
+    "BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", "BinomialDistribution",
+    "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution",
+    "NegativeHypergeometricDistribution", "PoissonDistribution", "SkellamDistribution",
     "UniformDiscreteDistribution", "YuleSimonDistribution", "ZipfDistribution", "ZipfianDistribution",
     # predefined continuous distributions
-    "CauchyDistribution", "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution", 
+    "CauchyDistribution", "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution",
     "ExponentialDistribution", "FDistribution", "NormalDistribution", "TDistribution",
     "UniformContinuousDistribution",
 ]
@@ -148,7 +148,7 @@ class Distribution(_abc.ABC):
         if len(parameters) > 0:
             raise ParameterValidationError(given, self.options)
     
-    @_abc.abstractmethod  
+    @_abc.abstractmethod
     def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _typing.Optional[_rv_frozen]:
         pass
     
@@ -217,7 +217,7 @@ class Distribution(_abc.ABC):
             One of the supported probability function abbreviations. See `thurstat.pfunc`.
         at: float
             The value to evaluate at.
-            
+        
         Returns
         -------
         float
@@ -258,23 +258,23 @@ class Distribution(_abc.ABC):
     @_abc.abstractmethod
     def probability_at(self, a: float) -> float:
         pass
-    
+        
     @_abc.abstractmethod
     def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> _typing.Union[CustomDiscreteDistribution, CustomContinuousDistribution]:
         pass
-    
+        
     @_abc.abstractmethod
     def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _typing.Optional[str]=None, **kwargs) -> None:
         pass
-    
+        
     @_abc.abstractmethod
     def apply_infix_operator(self, other: _typing.Union[float, _Self], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> _Self:
         pass
     
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self: 
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
         return self.apply_infix_operator(other, _operator.add, _operator.sub)
 
-    def __radd__(self, other: _typing.Union[float, _Self]) -> _Self: 
+    def __radd__(self, other: _typing.Union[float, _Self]) -> _Self:
         return self + other
     
     def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
@@ -283,10 +283,10 @@ class Distribution(_abc.ABC):
     def __rsub__(self, other: _typing.Union[float, _Self]) -> _Self:
         return -(self - other)
     
-    def __mul__(self, other: _typing.Union[float, _Self]) -> _Self: 
+    def __mul__(self, other: _typing.Union[float, _Self]) -> _Self:
         return self.apply_infix_operator(other, _operator.mul, _operator.truediv)
     
-    def __rmul__(self, other: _typing.Union[float, _Self]) -> _Self: 
+    def __rmul__(self, other: _typing.Union[float, _Self]) -> _Self:
         return self * other
     
     def __neg__(self) -> _Self:
@@ -305,13 +305,13 @@ class Distribution(_abc.ABC):
             else:
                 return self.apply_func(lambda x: x ** other, lambda x: x ** (1 / other))
         raise NotImplementedError("Exponentiation is currently not implemented between distributions or for non-integer or non-positive powers.")
-     
+    
     def __rpow__(self, other: _typing.Union[float, _Self]) -> _Self:
         if isinstance(other, int) and other > 0:
             return self.apply_func(lambda x: other ** x, lambda x: _np.log(x) / _np.log(other))
         raise NotImplementedError("Exponentiation is currently not implemented between distributions or for non-integer or non-positive bases.")
     
-    def __lt__(self, other: _typing.Union[float, _Self]) -> Event:        
+    def __lt__(self, other: _typing.Union[float, _Self]) -> Event:
         if isinstance(other, (int, float)):
             return Event(self, _portion.open(-_np.inf, other))
         elif isinstance(other, Distribution):
@@ -328,7 +328,6 @@ class Distribution(_abc.ABC):
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
     
     def __gt__(self, other: _typing.Union[float, _Self]) -> Event:
-            
         if isinstance(other, (int, float)):
             return Event(self, _portion.open(other, _np.inf))
         elif isinstance(other, Distribution):
@@ -368,7 +367,7 @@ class formula(object):
         if func is None:
             func = lambda x: x
         self.func = func
-           
+    
     def __call__(self, other: T) -> T:
         if isinstance(other, formula):
             return formula(lambda x: self.func(other(x)))
@@ -377,22 +376,22 @@ class formula(object):
         else:
             return self.func(other)
     
-    def __add__(self, other: float) -> _Self: 
+    def __add__(self, other: float) -> _Self:
         return formula(lambda x: self.func(x) + other)
     
-    def __radd__(self, other: float) -> _Self: 
+    def __radd__(self, other: float) -> _Self:
         return self + other
     
     def __sub__(self, other: float) -> _Self:
-        return formula(lambda x: self.func(x) - other) 
+        return formula(lambda x: self.func(x) - other)
     
     def __rsub__(self, other: float) -> _Self:
-        return formula(lambda x: other - self.func(x)) 
+        return formula(lambda x: other - self.func(x))
     
-    def __mul__(self, other: float) -> _Self: 
+    def __mul__(self, other: float) -> _Self:
         return formula(lambda x: self.func(x) * other)
     
-    def __rmul__(self, other: float) -> _Self: 
+    def __rmul__(self, other: float) -> _Self:
         return self * other
     
     def __neg__(self) -> _Self:
@@ -406,7 +405,7 @@ class formula(object):
     
     def __pow__(self, other: float) -> _Self:
         return formula(lambda x: self.func(x) ** other)
-        
+    
     def __rpow__(self, other: float) -> _Self:
         return formula(lambda x: other ** self.func(x))
     
@@ -418,7 +417,7 @@ class CustomDistribution(Distribution):
     @_abc.abstractmethod
     def __init__(self, dist: _rv_frozen) -> None:
         self._dist = dist
-        
+    
     def interpret_parameterization(self) -> None:
         return
     
@@ -449,7 +448,7 @@ class DiscreteDistribution(Distribution):
         infinity_approximation: Optional[int], default=None
             What value to use as an approximation for infinity when the original distribution's support is unbounded and the new distribution's support is not explicitly defined.
         a, b: Optional[int], default=None
-            What values to use as the support of the new distribution. 
+            What values to use as the support of the new distribution.
         
         Returns
         -------
@@ -466,12 +465,12 @@ class DiscreteDistribution(Distribution):
                 a0 = -infinity_approximation
             if b0 == _np.inf:
                 b0 = infinity_approximation
-                
+        
         if a is None:
             a = a0
         if b is None:
             b = b0
-                
+        
         x = _np.arange(a, b + 1)
         y = self.evaluate("pmf", x)
         
@@ -479,7 +478,7 @@ class DiscreteDistribution(Distribution):
         pmf = {}
         for e, p in zip(x_transform, y):
             pmf[e] = pmf.get(e, 0) + p
-            
+        
         a = min(x_transform)
         b = max(x_transform)
         
@@ -499,7 +498,7 @@ class DiscreteDistribution(Distribution):
             What color to use. Defaults to matplotlib's default blue color.
         **kwargs
             Additional keyword arguments to pass to `plt.stem`.
-            
+        
         Returns
         -------
         None
@@ -551,8 +550,8 @@ class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
     def __init__(self, dist: _rv_frozen) -> None:
         """Create a `CustomDiscreteDistribution` object given a frozen `scipy.stats.rv_discrete` object."""
         self._dist = dist
-        
-    @classmethod    
+    
+    @classmethod
     def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> _Self:
         """
         Create a distribution from a probability function.
@@ -565,7 +564,7 @@ class CustomDiscreteDistribution(CustomDistribution, DiscreteDistribution):
             The function itself.
         a, b: Numeric
             The support of the distribution.
-            
+        
         Returns
         -------
         CustomDiscreteDistribution
@@ -602,7 +601,7 @@ class ContinuousDistribution(Distribution):
         infinity_approximation: Optional[float], default=None
             What value to use as an approximation for infinity when the original distribution's support is unbounded and the new distribution's support is not explicitly defined.
         a, b: Optional[float], default=None
-            What values to use as the support of the new distribution. 
+            What values to use as the support of the new distribution.
         
         Returns
         -------
@@ -619,8 +618,8 @@ class ContinuousDistribution(Distribution):
                 a0 = -infinity_approximation
             if b0 == _np.inf:
                 b0 = infinity_approximation
-
-        if a is None: 
+        
+        if a is None:
             result = _minimize_scalar(func, bounds=(a0, b0), method="bounded")
             a = func(result.x)
         if b is None:
@@ -651,7 +650,7 @@ class ContinuousDistribution(Distribution):
             What color to use. Defaults to matplotlib's default blue color.
         **kwargs
             Additional keyword arguments to pass to `plt.stem`.
-            
+        
         Returns
         -------
         None
@@ -696,12 +695,12 @@ class ContinuousDistribution(Distribution):
             
             exact_pdf = lambda z: _quad_vec(lambda x: other.evaluate("pdf", inv_op(z, x)) * self.evaluate("pdf", x) * abs(1 if op != _operator.mul and op != _operator.truediv else inv_op(1, x + 1 / DEFAULTS["infinity_approximation"])), a=-_np.inf, b=_np.inf)[0]
             if DEFAULTS["exact"]:
-                return CustomContinuousDistribution.from_pfunc("pdf", exact_pdf, a2, b2) 
+                return CustomContinuousDistribution.from_pfunc("pdf", exact_pdf, a2, b2)
             
             diff = b2 - a2
             x = _np.linspace(a2, b2, int(diff) * DEFAULTS["ratio"])
             
-            approximate_pdf = exact_pdf(x)          
+            approximate_pdf = exact_pdf(x)
             @_np.vectorize
             def approximate_cdf(z):
                 i = _np.searchsorted(x, z, side="right")
@@ -720,8 +719,8 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
     def __init__(self, dist: _rv_frozen) -> None:
         """Create a `CustomContinuousDistribution` object given a frozen `scipy.stats.rv_continuous` object."""
         self._dist = dist
-        
-    @classmethod    
+    
+    @classmethod
     def from_pfunc(cls, pfunc: ProbabilityFunction, func: NumericFunction, a: float, b: float) -> _Self:
         """
         Create a distribution from a probability function.
@@ -734,7 +733,7 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
             The function itself.
         a, b: Numeric
             The support of the distribution.
-            
+        
         Returns
         -------
         CustomContinuousDistribution
@@ -745,7 +744,7 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
             pfunc = pfunc.value
         setattr(NewScipyContinuousDistribution, "_" + pfunc, staticmethod(func))
         return CustomContinuousDistribution(NewScipyContinuousDistribution(a=a, b=b))
-        
+    
 class Alias(object):
     """An alias for a distribution given the parameter convention."""
     
@@ -753,11 +752,11 @@ class Alias(object):
         """Create an alias given the class of distribution and parameter names in the order they will be passed."""
         self._tdist = tdist
         self._interpret_parameters = interpret_parameters
-        
+    
     def __call__(self, *value_parameters: float) -> Distribution:
         """Return a distribution interpreted by the alias."""
         return self._tdist(**{k: v for k, v in zip(self._interpret_parameters, value_parameters)})
-        
+    
 class Event(object):
     """An event described by a distribution and interval."""
     
@@ -767,7 +766,7 @@ class Event(object):
         """Create an event object."""
         self._tdist = tdist
         self._interval = interval
-        
+    
     def __bool__(self) -> bool:
         if Event._last is None:
             Event._last = self._interval
@@ -779,14 +778,13 @@ def probability_of(evt: Event) -> float:
     if Event._last is not None:
         evt._interval = evt._interval & Event._last
         Event._last = None
-        
+    
     for atomic in evt._interval._intervals:
         if atomic.lower > atomic.upper:
             continue
         elif atomic.lower == atomic.upper:
             probability += evt._tdist.probability_at(atomic.lower)
             continue
-        
         lower = atomic.lower
         upper = atomic.upper
         if isinstance(evt._tdist, DiscreteDistribution):
@@ -796,11 +794,11 @@ def probability_of(evt: Event) -> float:
                 upper -= 1
         probability += evt._tdist.probability_between(lower, upper)
     return probability
-    
+
 def P(evt: Event) -> float:
     """Return the probability of an event."""
     return probability_of(evt)
-    
+
 class BernoulliDistribution(DiscreteDistribution):
     """A Bernoulli distribution."""
     
@@ -815,7 +813,7 @@ class BernoulliDistribution(DiscreteDistribution):
         elif "q" in parameters:
             p = 1 - parameters.pop("q")
         return _stats.bernoulli(p)
-    
+
 class BetaBinomialDistribution(DiscreteDistribution):
     """A beta-binomial distribution."""
     
@@ -834,7 +832,7 @@ class BetaBinomialDistribution(DiscreteDistribution):
                 a = parameters.pop("alpha")
                 b = parameters.pop("beta")
         return _stats.betabinom(n, a, b)
-    
+
 class BinomialDistribution(DiscreteDistribution):
     """A binomial distribution."""
     
@@ -851,7 +849,7 @@ class BinomialDistribution(DiscreteDistribution):
             elif "q" in parameters:
                 p = 1 - parameters.pop("q")
         return _stats.binom(n, p)
-    
+
 class GeometricDistribution(DiscreteDistribution):
     """A geometric distribution."""
     
@@ -866,7 +864,7 @@ class GeometricDistribution(DiscreteDistribution):
         elif "q" in parameters:
             p = 1 - parameters.pop("q")
         return _stats.geom(p)
-    
+
 class HypergeometricDistribution(DiscreteDistribution):
     """A hypergeometric distribution."""
     
@@ -898,7 +896,7 @@ class HypergeometricDistribution(DiscreteDistribution):
                 elif "n" in parameters:
                     n = parameters.pop("m")
         return _stats.hypergeom(M, n, N)
-    
+
 class NegativeBinomialDistribution(DiscreteDistribution):
     """A negative binomial distribution."""
     
@@ -948,7 +946,7 @@ class NegativeBinomialDistribution(DiscreteDistribution):
             elif "q" in parameters:
                 p = 1 - parameters.pop("q")
         return _stats.nbinom(n, p)
-    
+
 class NegativeHypergeometricDistribution(DiscreteDistribution):
     """A negative hypergeometric distribution."""
     
@@ -979,7 +977,7 @@ class NegativeHypergeometricDistribution(DiscreteDistribution):
                 elif "n" in parameters:
                     n = parameters.pop("m")
         return _stats.nhypergeom(M, n, r)
-    
+
 class PoissonDistribution(DiscreteDistribution):
     """A Poisson distribution."""
     
@@ -997,7 +995,7 @@ class PoissonDistribution(DiscreteDistribution):
         elif "r" in parameters and "t" in parameters:
             mu = parameters.pop("r") * parameters.pop("t")
         return _stats.poisson(mu)
-    
+
 class SkellamDistribution(DiscreteDistribution):
     """A Skellam distribution."""
     
@@ -1010,12 +1008,12 @@ class SkellamDistribution(DiscreteDistribution):
             mu1 = parameters.pop("mu1")
             mu2 = parameters.pop("mu2")
         return _stats.skellam(mu1, mu2)
-    
+
 class UniformDiscreteDistribution(DiscreteDistribution):
     """A random integer or uniform discrete distribution."""
     
     options = [
-        ["a", "b"], 
+        ["a", "b"],
         ["low", "high"],
     ]
     
@@ -1027,7 +1025,7 @@ class UniformDiscreteDistribution(DiscreteDistribution):
             low = parameters.pop("low")
             high = parameters.pop("high")
         return _stats.randint(low, high)
-    
+
 class YuleSimonDistribution(DiscreteDistribution):
     """A Yule-Simon distribution."""
     
@@ -1045,7 +1043,7 @@ class YuleSimonDistribution(DiscreteDistribution):
         elif "a" in parameters:
             alpha = parameters.pop("a") - 1
         return _stats.yulesimon(alpha)
-    
+
 class ZipfDistribution(DiscreteDistribution):
     """A Zipf or zeta distribution."""
     
@@ -1060,7 +1058,7 @@ class ZipfDistribution(DiscreteDistribution):
         elif "s" in parameters:
             a = parameters.pop("s")
         return _stats.zipf(a)
-    
+
 class ZipfianDistribution(DiscreteDistribution):
     """A Zipfian distribution."""
     
@@ -1077,7 +1075,7 @@ class ZipfianDistribution(DiscreteDistribution):
             a = parameters.pop("s")
             n = parameters.pop("N")
         return _stats.zipfian(a, n)
-    
+
 class CauchyDistribution(ContinuousDistribution):
     """A Cauchy distribution."""
     
@@ -1109,7 +1107,7 @@ class ChiDistribution(ContinuousDistribution):
         elif "k" in parameters:
             df = parameters.pop("k")
         return _stats.chi(df)
-    
+
 class ChiSquaredDistribution(ContinuousDistribution):
     """A chi-squared distribution."""
     
@@ -1124,7 +1122,7 @@ class ChiSquaredDistribution(ContinuousDistribution):
         elif "k" in parameters:
             df = parameters.pop("k")
         return _stats.chi2(df)
-    
+
 class CosineDistribution(ContinuousDistribution):
     """A cosine approximation to the normal distribution."""
     
@@ -1206,7 +1204,7 @@ class NormalDistribution(ContinuousDistribution):
                 scale = 1 / _np.sqrt(parameters.pop("tau"))
         elif "mean" in parameters and "variance" in parameters:
             loc = parameters.pop("mean")
-            scale = _np.sqrt(parameters.pop("variance"))        
+            scale = _np.sqrt(parameters.pop("variance"))
         return _stats.norm(loc,scale)
 
 class TDistribution(ContinuousDistribution):
@@ -1223,12 +1221,12 @@ class TDistribution(ContinuousDistribution):
         elif "nu" in parameters:
             df = parameters.pop("nu")
         return _stats.t(df)
-    
+
 class UniformContinuousDistribution(ContinuousDistribution):
     """A uniform continuous distribution."""
     
     options = [
-        ["a", "b"], 
+        ["a", "b"],
         ["loc", "scale"],
     ]
     
