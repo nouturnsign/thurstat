@@ -1134,6 +1134,58 @@ class ZipfianDistribution(DiscreteDistribution):
             a = parameters.pop("s")
             n = parameters.pop("N")
         return _stats.zipfian(a, n)
+    
+class BetaDistribution(ContinuousDistribution):
+    """A beta distribution."""
+    
+    options = [
+        ["a", "b"],
+        ["alpha", "beta"],
+        ["mu", "nu"],
+        ["omega", "kappa"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
+        if "a" in parameters and "b" in parameters:
+            a = parameters.pop("a")
+            b = parameters.pop("b")
+        elif "alpha" in parameters and "beta" in parameters:
+            a = parameters.pop("alpha")
+            b = parameters.pop("beta")
+        elif "mu" in parameters and "nu" in parameters:
+            mu = parameters.pop("mu")
+            nu = parameters.pop("nu")
+            a = mu * nu
+            b = (1 - mu) * nu
+        elif "omega" in parameters and "kappa" in parameters:
+            omega = parameters.pop("omega")
+            kappa = parameters.pop("kappa")
+            a = omega * (kappa - 2) + 1
+            b = (1 - omega) * (kappa - 2) + 1
+        return _stats.beta(a, b)
+
+class BetaPrimeDistribution(ContinuousDistribution):
+    """A beta prime or inverted beta distribution."""
+    
+    options = [
+        ["a", "b"],
+        ["alpha", "beta"],
+        ["mu", "nu"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
+        if "a" in parameters and "b" in parameters:
+            a = parameters.pop("a")
+            b = parameters.pop("b")
+        elif "alpha" in parameters and "beta" in parameters:
+            a = parameters.pop("alpha")
+            b = parameters.pop("beta")
+        elif "mu" in parameters and "nu" in parameters:
+            mu = parameters.pop("mu")
+            nu = parameters.pop("nu")
+            a = mu * (1 + nu)
+            b = 2 + nu
+        return _stats.beta(a, b)
 
 class CauchyDistribution(ContinuousDistribution):
     """A Cauchy distribution."""
@@ -1198,6 +1250,33 @@ class CosineDistribution(ContinuousDistribution):
             loc = parameters.pop("mu")
             scale = parameters.pop("s")
         return _stats.cosine(loc, scale)
+    
+class ErlangDistribution(ContinuousDistribution):
+    """An Erlang distribution."""
+    
+    options = [
+        ["a", "beta"],
+        ["a", "scale"],
+        ["k", "lambda_"],
+        ["k", "beta"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
+        if "a" in parameters:
+            k = parameters.pop("a")
+            if "beta" in parameters:
+                beta = parameters.pop("beta")
+            elif "scale" in parameters:
+                beta = 1 / parameters.pop("scale")
+        elif "k" in parameters:
+            k = parameters.pop("k")
+            if "lambda_" in parameters:
+                beta  = parameters.pop("lambda_")
+            elif "beta" in parameters:
+                beta = 1 / parameters.pop("beta")
+        self.k = k
+        self.beta = beta
+        return _stats.erlang(k, scale=1 / beta)
 
 class ExponentialDistribution(ContinuousDistribution):
     """An exponential continuous random variable."""
@@ -1240,6 +1319,80 @@ class FDistribution(ContinuousDistribution):
             dfn = parameters.pop("d1")
             dfd = parameters.pop("d2")
         return _stats.f(dfn, dfd)
+    
+class GammaDistribution(ContinuousDistribution):
+    """A gamma distribution."""
+    
+    options = [
+        ["alpha", "beta"],
+        ["alpha", "theta"],
+        ["k", "beta"],
+        ["k", "theta"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
+        if "alpha" in parameters:
+            k = parameters.pop("alpha")
+        elif "k" in parameters:
+            k = parameters.pop("k")        
+        if "beta" in parameters:
+            beta  = parameters.pop("beta")
+        elif "theta" in parameters:
+            beta = 1 / parameters.pop("theta")
+        self.k = k
+        self.beta = beta
+        return _stats.erlang(k, scale=1 / beta)
+    
+class GompertzDistribution(ContinuousDistribution):
+    """A Gompertz distribution."""
+    
+    options = [
+        ["c"],
+        ["b", "eta"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
+        if "c" in parameters:
+            c = parameters.pop("c")
+            scale = 1
+        elif "b" in parameters and "eta" in parameters:
+            c = parameters.pop("eta")
+            scale = 1 / parameters.pop("b")
+        return _stats.gompertz(c, scale=scale)
+    
+class LaplaceDistribution(ContinuousDistribution):
+    """A Laplace distribution."""
+    
+    options = [
+        ["loc", "scale"],
+        ["mu", "b"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
+        if "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        elif "mu" in parameters and "b" in parameters:
+            loc = parameters.pop("mu")
+            scale = parameters.pop("b")
+        return _stats.laplace(loc, scale)
+    
+class LogisticDistribution(ContinuousDistribution):
+    """A logistic distribution."""
+    
+    options = [
+        ["loc", "scale"],
+        ["mu", "s"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
+        if "loc" in parameters and "scale" in parameters:
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        elif "mu" in parameters and "s" in parameters:
+            loc = parameters.pop("mu")
+            scale = parameters.pop("s")
+        return _stats.logistic(loc, scale)
 
 class NormalDistribution(ContinuousDistribution):
     """A normal continuous random variable"""
@@ -1280,6 +1433,46 @@ class TDistribution(ContinuousDistribution):
         elif "nu" in parameters:
             df = parameters.pop("nu")
         return _stats.t(df)
+    
+class TrapezoidalDistribution(ContinuousDistribution):
+    """A trapezoidal continuous random variable"""
+    
+    options = [
+        ["c", "d", "loc", "scale"],
+        ["a", "b", "c", "d"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
+        if "c" in parameters and "d" in parameters and "loc" in parameters and "scale" in parameters:
+            c = parameters.pop("c")
+            d = parameters.pop("d")
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        elif "a" in parameters and "b" in parameters and "c" in parameters and "d" in parameters:
+            loc = parameters.pop("a")
+            scale = parameters.pop("d") - loc
+            c = (parameters.pop("b") - loc) / scale
+            d = (parameters.pop("c") - loc) / scale
+        return _stats.trapezoid(c, d, loc, scale)
+    
+class TriangularDistribution(ContinuousDistribution):
+    """A triangular continuous random variable"""
+    
+    options = [
+        ["c", "loc", "scale"],
+        ["a", "b", "c"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
+        if "c" in parameters and "loc" in parameters and "scale" in parameters:
+            c = parameters.pop("c")
+            loc = parameters.pop("loc")
+            scale = parameters.pop("scale")
+        elif "a" in parameters and "b" in parameters and "c" in parameters:
+            loc = parameters.pop("a")
+            scale = parameters.pop("c") - loc
+            c = (parameters.pop("b") - loc) / scale
+        return _stats.triang(c, loc, scale)
 
 class UniformContinuousDistribution(ContinuousDistribution):
     """A uniform continuous distribution."""
@@ -1297,3 +1490,20 @@ class UniformContinuousDistribution(ContinuousDistribution):
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
         return _stats.uniform(loc, scale)
+    
+class WeibullDistribution(ContinuousDistribution):
+    """A Weibull distribution."""
+    
+    options = [
+        ["c"],
+        ["k", "lambda_"],
+    ]
+    
+    def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
+        if "c" in parameters:
+            c = parameters.pop("c")
+            scale = 1
+        elif "k" in parameters and "lambda_" in parameters:
+            c = parameters.pop("k")
+            scale = parameters.pop("lambda_")
+        return _stats.weibull_min(c, scale=scale)
