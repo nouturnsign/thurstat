@@ -771,6 +771,9 @@ class Event(object):
         """Create an event object."""
         self._tdist = tdist
         self._interval = interval
+        if Event._last is not None:
+            self._interval = self._interval & Event._last
+            Event._last = None
     
     def __bool__(self) -> bool:
         if Event._last is None:
@@ -780,9 +783,6 @@ class Event(object):
 def probability_of(evt: Event) -> float:
     """Return the probability of an event."""
     probability = 0
-    if Event._last is not None:
-        evt._interval = evt._interval & Event._last
-        Event._last = None
     
     for atomic in evt._interval._intervals:
         if atomic.lower > atomic.upper:
