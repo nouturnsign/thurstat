@@ -690,7 +690,10 @@ class ContinuousDistribution(Distribution):
                 a1 = -DEFAULTS["infinity_approximation"]
             if b1 == _np.inf:
                 b1 = DEFAULTS["infinity_approximation"]
-            values = op(a0, a1), op(a0, b1), op(b0, a0), op(b0, b1)
+            values = [op(a0, a1), op(a0, b1), 
+                      op(a1, a0), op(a1, b0),
+                      op(b0, a1), op(b0, b1),
+                      op(b1, a0), op(b1, b0)]
             a2, b2 = min(values), max(values)
             
             exact_pdf = lambda z: _quad_vec(lambda x: other.evaluate("pdf", inv_op(z, x)) * self.evaluate("pdf", x) * abs(1 if op != _operator.mul and op != _operator.truediv else inv_op(1, x + 1 / DEFAULTS["infinity_approximation"])), a=-_np.inf, b=_np.inf)[0]
@@ -1546,7 +1549,25 @@ class UniformContinuousDistribution(ContinuousDistribution):
         elif "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
+        self.a = loc
+        self.b = loc + scale
         return _stats.uniform(loc, scale)
+    
+    def __add__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
+        if isinstance(other, UniformContinuousDistribution):
+            a, b, c, d = sorted([self.a + other.a, self.a + other.b, self.b + other.a, self.b + other.b])
+            if b == c:
+                return TriangularDistribution(a=a, b=b, c=d)
+            return TrapezoidalDistribution(a=a, b=b, c=c, d=d)
+        return super().__add__(other)
+    
+    def __sub__(self, other: _typing.Union[float, ContinuousDistribution]) -> ContinuousDistribution:
+        if isinstance(other, UniformContinuousDistribution):
+            a, b, c, d = sorted([self.a - other.a, self.a - other.b, self.b - other.a, self.b - other.b])
+            if b == c:
+                return TriangularDistribution(a=a, b=b, c=d)
+            return TrapezoidalDistribution(a=a, b=b, c=c, d=d)
+        return super().__sub__(other)
     
 class WeibullDistribution(ContinuousDistribution):
     """A Weibull distribution."""
