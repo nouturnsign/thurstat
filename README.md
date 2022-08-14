@@ -229,6 +229,7 @@ For convenience, some defaults are assumed to be good values but can be changed 
 - infinity_approximation: large enough to be considered a finite infinity, defaults to `1e6`
 - exact: whether or not to use approximations in continuous random variable arithmetic, defaults to `False`
 - ratio: the ratio of points plotted to distance between endpoints when displaying, defaults to `200`
+- buffer: the additional percent of the width to be plotted to both the right and left, defaults to `0.2`
 - default_color: default matplotlib color to be used when plotting, defaults to `"C0"`
 - local_seed: the numeric value of the seed when calling any function or None if no local seed, defaults to `None`
 - global_seed: the numeric value of the seed singleton to be set at the beginning or None if no global seed, defaults to `None`
