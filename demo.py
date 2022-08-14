@@ -21,6 +21,11 @@ B = BinomialDistribution.to_alias("n", "p")
 C = B(10, 0.2)
 C.display("pmf")
 
+D = B(5, 0.3)
+E = B(3, 0.3)
+print(type(E))
+E.display("pmf")
+
 @formula
 def absolute(x):
     return np.abs(x)

@@ -812,7 +812,15 @@ class BernoulliDistribution(DiscreteDistribution):
             p = parameters.pop("p")
         elif "q" in parameters:
             p = 1 - parameters.pop("q")
+        self.p = p
         return _stats.bernoulli(p)
+    
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, BernoulliDistribution) and self.p == other.p:
+            return BinomialDistribution(n=2, p=self.p)
+        if isinstance(other, BinomialDistribution) and self.p == other.p:
+            return BinomialDistribution(n=1 + other.n, p=self.p)
+        return super().__add__(other)
 
 class BetaBinomialDistribution(DiscreteDistribution):
     """A beta-binomial distribution."""
@@ -848,7 +856,23 @@ class BinomialDistribution(DiscreteDistribution):
                 p = parameters.pop("p")
             elif "q" in parameters:
                 p = 1 - parameters.pop("q")
+        self.n = n
+        self.p = p
         return _stats.binom(n, p)
+    
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, BernoulliDistribution) and self.p == other.p:
+            return BinomialDistribution(n=self.n + 1, p=self.p)
+        if isinstance(other, BinomialDistribution) and self.p == other.p:
+            return BinomialDistribution(n=self.n + other.n, p=self.p)
+        return super().__add__(other)
+    
+    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, BernoulliDistribution) and self.p == other.p:
+            return BinomialDistribution(n=self.n - 1, p=self.p)
+        if isinstance(other, BinomialDistribution) and self.p == other.p:
+            return BinomialDistribution(n=self.n - other.n, p=self.p)
+        return super().__sub__(other)
 
 class GeometricDistribution(DiscreteDistribution):
     """A geometric distribution."""
