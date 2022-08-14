@@ -1,6 +1,6 @@
 # thurstat
 
-thurstat is a WIP easy-to-use univariate probability distribution module, mainly convenient wrappers for scipy.stats. Sometimes sacrifices accuracy for time and convenience.
+thurstat is a WIP easy-to-use univariate probability distribution module, mainly convenient wrappers for scipy.stats. Sometimes sacrifices accuracy for time and convenience, written in Python.
 
 ## Installation
 
@@ -70,6 +70,8 @@ When creating a new distribution, each distribution is assumed to be independent
 Use common names for parameters; all parameters must be named. Any parameters that are keywords (e.g. lambda) should be appended with an underscore (e.g. lambda_). Any parameters with subscripts (x_0) should be input without an underscore in between the variable name and subscript (e.g. x0). Parameters with superscripts (e.g. sigma^2) are not accepted; other names in place of these superscript parameters might be (e.g. variance). If the parameters are invalid, a `ParameterValidationError` will be raised, and should display acceptable options. When in doubt, consult `scipy.stats` or Wikipedia. 
 
 ### Useful attributes
+
+Some distributions will have additional attributes. These are meant for internal use, representing the parameters based on one of the characterizations.
 
 ```
 support
@@ -216,7 +218,7 @@ X = B(10, 0.2)
 
 ### Events and probability
 
-A function `P` is defined for probability-like notation. `P` aliases the function `probability_of` in case `P` is already defined as a constant. Comparisons for `Distribution` objects are implemented to return `Event` objects. Avoid using the Event constructor.
+A function `P` is defined for probability-like notation. `P` aliases the function `probability_of` in case `P` is already defined as a constant. Comparisons for `Distribution` objects are implemented to return `Event` objects. Avoid using the Event constructor. Note that multiple inequality comparisons are not truly multiple inequality comparisons, so avoid comparing distributions within multiple inequalities and expressions with more than two inequalities.
 
 e.g.
 ```py
