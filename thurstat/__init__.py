@@ -1406,15 +1406,19 @@ class LogisticDistribution(ContinuousDistribution):
     options = [
         ["loc", "scale"],
         ["mu", "s"],
+        ["mu", "sigma"],
     ]
     
     def interpret_parameterization(self, parameters: _typing.Dict[str, float]) -> _rv_frozen:
         if "loc" in parameters and "scale" in parameters:
             loc = parameters.pop("loc")
             scale = parameters.pop("scale")
-        elif "mu" in parameters and "s" in parameters:
+        elif "mu" in parameters:
             loc = parameters.pop("mu")
-            scale = parameters.pop("s")
+            if "s" in parameters:
+                scale = parameters.pop("s")
+            elif "sigma" in parameters:
+                scale = _np.sqrt(3) / _np.pi * parameters.pop("sigma")
         return _stats.logistic(loc, scale)
 
 class NormalDistribution(ContinuousDistribution):
