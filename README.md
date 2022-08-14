@@ -98,25 +98,33 @@ discretize() # ContinuousDistribution only
 ```
 to_alias(*interpret_parameters)
 from_pfunc(pfunc, func, a, b)
-from_dist(dist)
+```
+
+### Useful constructors
+
+```
+formula()
+Custom...Distribution(dist)
+Alias(tdist, *interpret_parameters)
+Event(tdist, interval)
 ```
 
 ### Custom distributions
 
-Use the classmethod `from_pfunc` or `from_dist` with the type of desired distribution. When using `from_dist`, input a `rv_frozen` object. In other words, create a distribution using `scipy.stats.[distribution]` and pass that into `from_dist`.
-
-Alternatively, create a new class inheriting from the desired type of distribution and implement method `interpret_parameters` to return a `rv_frozen` object. This allows for creating a general class of distribution with acceptable parameters instead of a new custom distribution every time the parameters are changed.
+Use the constructor or classmethod `from_pfunc` with the custom type of desired distribution. Alternatively, create a new class inheriting from the desired type of distribution and implement method `interpret_parameters` to return a `rv_frozen` object. This allows for creating a general class of distribution with acceptable parameters instead of a new custom distribution every time the parameters are changed.
 
 e.g.
 ```py
-# from_pfunc
 from numpy import pi
-X = ContinuousDistribution.from_pfunc("pdf", lambda x: 1 / (pi * (1 + x ** 2)), a=0, b=1)
 
-# from_dist
-X = ContinuousDistribution.from_dist(scipy.stats.cauchy())
+# constructor
+X = CustomContinuousDistribution(scipy.stats.cauchy())
+
+# from_pfunc
+X = CustomContinuousDistribution.from_pfunc("pdf", lambda x: 1 / (pi * (1 + x ** 2)), a=0, b=1)
 
 # inheritance
+from typing import Dict
 import scipy.stats
 
 class CauchyDistribution(ContinuousDistribution):
@@ -130,7 +138,7 @@ class CauchyDistribution(ContinuousDistribution):
     
     # implement this method
     # pop parameters and assign to values for parameter validation
-    def interpret_parameterization(self, parameters: _Dict[str, float]) -> scipy.stats.rv_continuous:
+    def interpret_parameterization(self, parameters: Dict[str, float]) -> scipy.stats.rv_frozen:
         if "x0" in parameters and "gamma" in parameters:
             loc = parameters.pop("x0")
             scale = parameters.pop("gamma")
@@ -150,18 +158,18 @@ Y = UniformDiscreteDistribution(a=1, b=6).apply_func(lambda x: x ** 2)
 Z = UniformContinuousDistribution(a=0, b=1).apply_func(abs, lambda x: x, lambda x: -x)
 ```
 
-### FormulaVariable and formula
+### formula
 
 Write formulas without lambda expressions with formula-like notation.
 
 e.g.
 ```py
-# using FormulaVariable and formula decorator to create functions
-x = FormulaVariable()
+# using formula constructor and as decorator to create functions
+x = formula()
 @formula
 def sqrt(x):
     return x ** 0.5
-X = ContinuousDistribution.from_pfunc("pdf", 1.5 * sqrt(x), a=0, b=1)
+X = CustomContinuousDistribution.from_pfunc("pdf", 1.5 * sqrt(x), a=0, b=1)
 
 # using formula decorator on distributions
 @formula
@@ -172,7 +180,7 @@ Y = square(UniformDiscreteDistribution(a=1, b=6))
 
 ### Random Variable Arithmetic
 
-Perform addition, subtraction, and multiplication on distributions with other distributions and numerics.
+Perform addition, subtraction, and multiplication on distributions with other distributions and numerics. Limited support for exponentiation.
 
 e.g.
 ```py
@@ -236,6 +244,7 @@ update_defaults(warnings="ignore", infinity_approximation=1e3)
 ## Future goals
 
 - implement division and exponentiation (in the general case) on distributions
+- implement faster addition, subtraction, and multiplication (in specific cases) on certain distributions
 - implement multivariate distributions and create dependent distributions
 - implement conditional probability and events
 - improve accuracy of approximations for continuous random variable arithmetic
