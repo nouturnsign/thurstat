@@ -23,8 +23,9 @@ C.display("pmf")
 
 D = B(5, 0.3)
 E = B(3, 0.3)
-print(type(E))
-E.display("pmf")
+F = D + E
+print(type(F))
+F.display("pmf")
 
 @formula
 def absolute(x):
