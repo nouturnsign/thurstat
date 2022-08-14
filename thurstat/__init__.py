@@ -248,8 +248,8 @@ class Distribution(_abc.ABC):
         return self._dist.moment(n)
     
     @classmethod
-    def to_alias(cls, *interpret_parameters: str) -> Alias:
-        return Alias(cls, *interpret_parameters)
+    def to_alias(cls, *characterization: str) -> Alias:
+        return Alias(cls, *characterization)
     
     @_abc.abstractmethod
     def probability_between(self, a: float, b: float) -> float:
@@ -748,14 +748,14 @@ class CustomContinuousDistribution(CustomDistribution, ContinuousDistribution):
 class Alias(object):
     """An alias for a distribution given the parameter convention."""
     
-    def __init__(self, tdist: _typing.Type[Distribution], *interpret_parameters: str) -> None:
+    def __init__(self, tdist: _typing.Type[Distribution], *characterization: str) -> None:
         """Create an alias given the class of distribution and parameter names in the order they will be passed."""
         self._tdist = tdist
-        self._interpret_parameters = interpret_parameters
+        self._characterization = characterization
     
-    def __call__(self, *value_parameters: float) -> Distribution:
+    def __call__(self, *parameters: float) -> Distribution:
         """Return a distribution interpreted by the alias."""
-        return self._tdist(**{k: v for k, v in zip(self._interpret_parameters, value_parameters)})
+        return self._tdist(**{k: v for k, v in zip(self._characterization, parameters)})
     
 class Event(object):
     """An event described by a distribution and interval."""
