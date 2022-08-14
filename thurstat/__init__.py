@@ -1042,7 +1042,18 @@ class PoissonDistribution(DiscreteDistribution):
             mu = parameters.pop("lambda_")
         elif "r" in parameters and "t" in parameters:
             mu = parameters.pop("r") * parameters.pop("t")
+        self.mu = mu
         return _stats.poisson(mu)
+    
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, PoissonDistribution):
+            return PoissonDistribution(mu=self.mu + other.mu)
+        return super().__add__(other)
+    
+    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, PoissonDistribution):
+            return SkellamDistribution(mu1=self.mu, mu2=other.mu)
+        return super().__sub__(other)
 
 class SkellamDistribution(DiscreteDistribution):
     """A Skellam distribution."""
