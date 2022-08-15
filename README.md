@@ -71,7 +71,7 @@ Use common names for parameters; all parameters must be named. Any parameters th
 
 ### Useful attributes
 
-Some distributions will have additional attributes. These are meant for internal use, representing the parameters based on one of the characterizations.
+Some distributions will have additional attributes. Those are meant for internal use, representing the parameters based on one of the characterizations. The attributes given below are for all distributions.
 
 ```
 support
@@ -85,7 +85,7 @@ standard_deviation
 
 ### Useful methods
 
-See docstrings for additional arguments. 
+See docstrings for additional arguments. The methods given below are for all distributions except `discretize`.
 
 ```
 generate_random_values(n)
@@ -100,6 +100,8 @@ discretize() # ContinuousDistribution only
 ```
 
 ### Useful classmethods
+
+Use `to_alias` with any distribution class, and use `from_pfunc` on `Custom...Distribution`. See below for more on aliases.
 
 ```
 to_alias(*interpret_parameters)
@@ -118,7 +120,7 @@ Event(tdist, interval)
 
 ### Custom distributions
 
-Use the constructor or classmethod `from_pfunc` with the custom type of desired distribution. Alternatively, create a new class inheriting from the desired type of distribution and implement method `interpret_parameters` to return a `rv_frozen` object. This allows for creating a general class of distribution with acceptable parameters instead of a new custom distribution every time the parameters are changed.
+Use the constructor or classmethod `from_pfunc` with the custom type of desired distribution. Alternatively, create a new class inheriting from the desired type of distribution and implement method `interpret_parameters` to return a `rv_frozen` object. This allows for creating a general class of distribution with acceptable parameters instead of a new custom distribution every time the parameters are changed. Try to minimize the number of infinity-like expressions as these will cause floating point overflow (i.e. the number is too large).
 
 e.g.
 ```py
@@ -191,7 +193,7 @@ Y = square(UniformDiscreteDistribution(a=1, b=6))
 
 ### Random Variable Arithmetic
 
-Perform addition, subtraction, and multiplication on distributions with other distributions and numerics. Limited support for exponentiation.
+Perform addition, subtraction, and multiplication on distributions with other distributions and numerics. Limited support for exponentiation. Division only works between continuous distributions and numbers currently and must be implemented through `apply_func`. Note that for continuous distributions, the accuracy of the approximation is unknown but so far seems to not be too large; it is possible that the error be too large.
 
 e.g.
 ```py
@@ -203,7 +205,7 @@ Z = 2 * (X - Y)
 
 ### Alias
 
-Instead of forcibly naming arguments every time you wish to instantiate a class, you may also create an alias with positional arguments as the parameters in the order they come.
+Instead of forcibly naming arguments every time you wish to instantiate a class, you may also create an alias using positional arguments as the characterization.
 
 e.g.
 ```py
@@ -218,7 +220,7 @@ X = B(10, 0.2)
 
 ### Events and probability
 
-A function `P` is defined for probability-like notation. `P` aliases the function `probability_of` in case `P` is already defined as a constant. Comparisons for `Distribution` objects are implemented to return `Event` objects. Avoid using the Event constructor. Note that multiple inequality comparisons are not truly multiple inequality comparisons, so avoid comparing distributions within multiple inequalities and expressions with more than two inequalities.
+A function `P` is defined for probability-like notation. `P` aliases the function `probability_of` in case `P` is already defined as a constant. Comparisons with `Distribution` objects are implemented to return `Event` objects. Avoid using the `Event` constructor. Note that multiple inequality comparisons are not truly multiple inequality comparisons, so avoid comparing distributions within multiple inequalities and expressions with more than two inequalities. Below is an example of an acceptable multiple inequality (using <=, >, and >= are all acceptable as well).
 
 e.g.
 ```py
@@ -229,7 +231,7 @@ Y = UniformContinuousDistribution(a=0, b=1)
 print(P(X < 0.4))
 print(P(X < Y))
 
-# complex comparisons are also supported
+# multiple inequality comparisons are also supported
 print(P(0.2 < X < 0.4))
 ```
 
@@ -240,7 +242,7 @@ For convenience, some defaults are assumed to be good values but can be changed 
 - infinity_approximation: large enough to be considered a finite infinity, defaults to `1e6`
 - exact: whether or not to use approximations in continuous random variable arithmetic, defaults to `False`
 - ratio: the ratio of points plotted to distance between endpoints when displaying, defaults to `200`
-- buffer: the additional percent of the width to be plotted to both the right and left, defaults to `0.2`
+- buffer: the additional percent of the width to be plotted to both the left and right of `display`, defaults to `0.2`
 - default_color: default matplotlib color to be used when plotting, defaults to `"C0"`
 - local_seed: the numeric value of the seed when calling any function or None if no local seed, defaults to `None`
 - global_seed: the numeric value of the seed singleton to be set at the beginning or None if no global seed, defaults to `None`
