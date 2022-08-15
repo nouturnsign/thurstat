@@ -2,9 +2,9 @@ cycler==0.11.0
 fonttools==4.34.4
 kiwisolver==1.4.4
 matplotlib==3.2.2
-numpy==1.21.6
+numpy==1.22
 packaging==21.3
-Pillow==7.1.2
+Pillow==9.0.1
 portion==2.2.0
 pyparsing==3.0.9
 python-dateutil==2.8.2
