@@ -107,7 +107,8 @@ def update_defaults(**kwargs) -> None:
         The numeric value of the seed when calling any function or None if no local seed, defaults to `None`
     global_seed: int
         The numeric value of the seed singleton to be set at the beginning or None if no global seed, defaults to `None`
-    warnings: the warning level to be displayed according to Python's `warning` module, defaults to `default`
+    warnings: str
+        The warning level to be displayed according to Python's `warning` module, defaults to `default`
 
     Returns
     -------

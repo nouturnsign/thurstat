@@ -38,7 +38,7 @@ Z.display("pdf")
 
 ## Recipes
 
-Throughout, probability function will often be abbreviated as `pfunc`, function as `func`, distribution as `dist`, and thurstat distribution as `tdist` in code.
+Throughout, probability function will often be abbreviated as `pfunc`, function as `func`, scipy.stats distribution as `dist`, and thurstat distribution as `tdist` in code.
 
 ### Useful constants
 
@@ -65,9 +65,9 @@ To get probability functions, use the enum `pfunc` e.g. `pfunc.PDF`. Alternative
 
 ### Creating distribution objects
 
-When creating a new distribution, each distribution is assumed to be independent. 
+When creating a new distribution, each distribution is assumed to be univariate, independent, and not mixed (i.e. either only discrete or only continuous). 
 
-Use common names for parameters; all parameters must be named. Any parameters that are keywords (e.g. lambda) should be appended with an underscore (e.g. lambda_). Any parameters with subscripts (x_0) should be input without an underscore in between the variable name and subscript (e.g. x0). Parameters with superscripts (e.g. sigma^2) are not accepted; other names in place of these superscript parameters might be (e.g. variance). If the parameters are invalid, a `ParameterValidationError` will be raised, and should display acceptable options. When in doubt, consult `scipy.stats` or Wikipedia. 
+Use common names for parameters; all parameters must be named. Any parameters that are keywords (e.g. lambda) should be appended with an underscore (e.g. lambda_). Any parameters with subscripts (x_0) should be input without an underscore in between the variable name and subscript (e.g. x0). Parameters with superscripts (e.g. sigma^2) are not accepted; other names in place of these superscript parameters might be (e.g. variance). If the parameters are invalid, a `ParameterValidationError` will be raised, and should display acceptable options. When in doubt, consult `scipy.stats` or Wikipedia. If not `None`, the `options` class attribute will contain acceptable parameterizations. 
 
 ### Useful attributes
 
@@ -101,7 +101,7 @@ discretize() # ContinuousDistribution only
 
 ### Useful classmethods
 
-Use `to_alias` with any distribution class, and use `from_pfunc` on `Custom...Distribution`. See below for more on aliases.
+Use `to_alias` with any distribution class, and use `from_pfunc` on `Custom...Distribution`. Note that inputting a `"pdf"` will mean that scipy has to integrate the `"pdf"` to calculate the `"cdf"`. If inputting the `"pdf"` is too slow, try integrating by hand or with other software first, then using `from_pfunc` on the `"cdf"`. See below for more on aliases.
 
 ```
 to_alias(*interpret_parameters)
@@ -133,7 +133,6 @@ X = CustomContinuousDistribution(scipy.stats.cauchy())
 X = CustomContinuousDistribution.from_pfunc("pdf", lambda x: 1 / (pi * (1 + x ** 2)), a=0, b=1)
 
 # inheritance
-from typing import Dict
 import scipy.stats
 
 class CauchyDistribution(ContinuousDistribution):
@@ -147,7 +146,7 @@ class CauchyDistribution(ContinuousDistribution):
     
     # implement this method
     # pop parameters and assign to values for parameter validation
-    def interpret_parameterization(self, parameters: Dict[str, float]) -> scipy.stats.rv_frozen:
+    def interpret_parameterization(self, parameters):
         if "x0" in parameters and "gamma" in parameters:
             loc = parameters.pop("x0")
             scale = parameters.pop("gamma")
@@ -171,7 +170,7 @@ Z = UniformContinuousDistribution(a=0, b=1).apply_func(abs, lambda x: x, lambda 
 
 ### formula
 
-Write formulas without lambda expressions with formula-like notation. Note that formulas are immutable, so modifying formulas creates new formula objects instead of modifying the original object.
+Write formulas without lambda expressions with formula-like notation. Formulas can be called on numeric inputs, distributions, and on each other. Note that formulas are immutable, so modifying formulas creates new `formula` objects instead of modifying the original object. 
 
 e.g.
 ```py
@@ -179,6 +178,7 @@ e.g.
 x = formula()
 
 # using decorator to create functions
+# the parameter can be named anything, does not have to be x
 @formula
 def sqrt(x):
     return x ** 0.5
@@ -194,6 +194,8 @@ Y = square(UniformDiscreteDistribution(a=1, b=6))
 ### Random Variable Arithmetic
 
 Perform addition, subtraction, and multiplication on distributions with other distributions and numerics. Limited support for exponentiation. Division only works between continuous distributions and numbers currently and must be implemented through `apply_func`. Note that for continuous distributions, the accuracy of the approximation is unknown but so far seems to not be too large; it is possible that the error be too large. Allow for as long as a minute, depending on the distribution.
+
+Each distribution is assumed to be different, so `X + X != 2 * X`. 
 
 e.g.
 ```py
@@ -261,12 +263,12 @@ update_defaults(warnings="ignore", infinity_approximation=1e3)
 - implement faster addition, subtraction, and multiplication (in specific cases) on certain distributions
 - implement multivariate distributions and create dependent distributions
 - implement conditional probability and events
-- improve accuracy of approximations for continuous random variable arithmetic
-- implement event arithmetic
+- assess and improve accuracy of approximations for continuous random variable arithmetic
+- implement event arithmetic (intersection, union)
 - implement model fitting
 - add more distributions
 - add tests
 
 ## License
 
-Currently no license.
+Currently no license. `thurstat` is still very WIP and not meant for use yet.
