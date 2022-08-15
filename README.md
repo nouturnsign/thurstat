@@ -193,7 +193,7 @@ Y = square(UniformDiscreteDistribution(a=1, b=6))
 
 ### Random Variable Arithmetic
 
-Perform addition, subtraction, and multiplication on distributions with other distributions and numerics. Limited support for exponentiation. Division only works between continuous distributions and numbers currently and must be implemented through `apply_func`. Note that for continuous distributions, the accuracy of the approximation is unknown but so far seems to not be too large; it is possible that the error be too large.
+Perform addition, subtraction, and multiplication on distributions with other distributions and numerics. Limited support for exponentiation. Division only works between continuous distributions and numbers currently and must be implemented through `apply_func`. Note that for continuous distributions, the accuracy of the approximation is unknown but so far seems to not be too large; it is possible that the error be too large. Allow for as long as a minute, depending on the distribution.
 
 e.g.
 ```py
