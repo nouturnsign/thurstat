@@ -1,13 +1,13 @@
 # thurstat
 
-thurstat is a WIP easy-to-use univariate probability distribution module, mainly convenient wrappers for scipy.stats. Sometimes sacrifices accuracy for time and convenience, written in Python.
+thurstat is a WIP easy-to-use univariate probability distribution module, mainly convenient wrappers for matplotlib.pyplot. numpy, and scipy.stats. Sometimes sacrifices accuracy for time and convenience, written in Python.
 
 ## Installation
 
 Python >= 3.7, specifically with Google Colab usage in mind.
 
 ```bash
-pip install git+https://github.com/nouturnsign/thurstat
+pip install git+https://github.com/nouturnsign/thurstat.git
 ```
 
 ## Usage
