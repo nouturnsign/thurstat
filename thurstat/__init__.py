@@ -378,37 +378,53 @@ class formula(object):
         else:
             return self.func(other)
     
-    def __add__(self, other: float) -> _Self:
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(x) + other.func(x))
         return formula(lambda x: self.func(x) + other)
     
-    def __radd__(self, other: float) -> _Self:
+    def __radd__(self, other: _typing.Union[float, _Self]) -> _Self:
         return self + other
     
-    def __sub__(self, other: float) -> _Self:
+    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(x) - other.func(x))
         return formula(lambda x: self.func(x) - other)
     
-    def __rsub__(self, other: float) -> _Self:
+    def __rsub__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: other.func(x) - self.func(x))
         return formula(lambda x: other - self.func(x))
     
-    def __mul__(self, other: float) -> _Self:
+    def __mul__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(x) * other.func(x))
         return formula(lambda x: self.func(x) * other)
     
-    def __rmul__(self, other: float) -> _Self:
+    def __rmul__(self, other: _typing.Union[float, _Self]) -> _Self:
         return self * other
     
     def __neg__(self) -> _Self:
         return self * -1
     
-    def __truediv__(self, other: float) -> _Self:
+    def __truediv__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(x) / other.func(x))
         return formula(lambda x: self.func(x) / other)
     
-    def __rtruediv__(self, other: float) -> _Self:
+    def __rtruediv__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: other.func(x) / self.func(x))
         return formula(lambda x: other / self.func(x))
     
-    def __pow__(self, other: float) -> _Self:
+    def __pow__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(x) ** other.func(x))
         return formula(lambda x: self.func(x) ** other)
     
-    def __rpow__(self, other: float) -> _Self:
+    def __rpow__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: other.func(x) ** self.func(x))
         return formula(lambda x: other ** self.func(x))
     
 class CustomDistribution(Distribution):
