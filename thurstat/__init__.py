@@ -902,7 +902,10 @@ class BinomialDistribution(DiscreteDistribution):
         if isinstance(other, BernoulliDistribution) and self.p == other.p:
             return BinomialDistribution(n=self.n - 1, p=self.p)
         if isinstance(other, BinomialDistribution) and self.p == other.p:
-            return BinomialDistribution(n=self.n - other.n, p=self.p)
+            n = self.n - other.n
+            if n == 1:
+                return BernoulliDistribution(p=self.p)
+            return BinomialDistribution(n=n, p=self.p)
         return super().__sub__(other)
 
 class GeometricDistribution(DiscreteDistribution):
