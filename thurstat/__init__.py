@@ -87,7 +87,7 @@ DEFAULTS = {
     "warnings": "default",
 }
 
-def update_defaults(**kwargs) -> None:
+def update_defaults(**kwargs: _typing.Any) -> None:
     """
     Update the global defaults.
     
@@ -267,7 +267,7 @@ class Distribution(_abc.ABC):
         pass
         
     @_abc.abstractmethod
-    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _typing.Optional[str]=None, **kwargs) -> None:
+    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _typing.Optional[str]=None, **kwargs: _typing.Any) -> None:
         pass
         
     @_abc.abstractmethod
@@ -503,7 +503,7 @@ class DiscreteDistribution(Distribution):
         
         return CustomDiscreteDistribution.from_pfunc("pmf", _np.vectorize(lambda a: pmf.get(a, 0)), a, b)
     
-    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _typing.Optional[str]=None, **kwargs) -> None:
+    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _typing.Optional[str]=None, **kwargs: _typing.Any) -> None:
         """
         Display a probability function.
         
@@ -655,7 +655,7 @@ class ContinuousDistribution(Distribution):
             _warnings.warn("Multiple branched inverse functions are currently questionably implemented. Use 1 to 1 functions when possible.")
             return CustomContinuousDistribution.from_pfunc("pdf", lambda y: sum(self.evaluate("pdf", inverse_func(y)) * _np.absolute(_derivative(inverse_func, y, dx=1 / infinity_approximation)) for inverse_func in inverse_funcs), a=a, b=b)
     
-    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _typing.Optional[str]=None, **kwargs) -> None:
+    def display(self, pfunc: ProbabilityFunction, add: bool=False, color: _typing.Optional[str]=None, **kwargs: _typing.Any) -> None:
         """
         Display a probability function.
         
@@ -684,7 +684,7 @@ class ContinuousDistribution(Distribution):
         y = self.evaluate(pfunc, x)
         if color is None:
             color = DEFAULTS["default_color"]
-        lines = _plt.plot(x, y, color=color)
+        lines = _plt.plot(x, y, color=color, **kwargs)
         if not add:
             _plt.show()
     
