@@ -42,7 +42,7 @@ Throughout, probability function will often be abbreviated as `pfunc`, function 
 
 ### Useful constants
 
-To get probability functions, use the enum `pfunc` e.g. `pfunc.PDF`. Alternatively, use the commonly accepted abbreviation according to `scipy.stats` e.g. `"pdf"`.
+To get probability functions, use the enum `PFUNC` e.g. `PFUNC.PDF`. Alternatively, use the commonly accepted abbreviation according to `scipy.stats` e.g. `"pdf"`.
 
 ### Predefined discrete distributions
 

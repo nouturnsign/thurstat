@@ -20,7 +20,7 @@ from scipy.stats._distn_infrastructure import rv_frozen as _rv_frozen
 
 __all__ = [
     # global
-    "pfunc", "update_defaults", "formula",
+    "PFUNC", "update_defaults", "formula",
     # base classes
     "Distribution", "DiscreteDistribution", "ContinuousDistribution",
     # custom equivalents of the base classes
@@ -40,41 +40,9 @@ __all__ = [
     "TriangularDistribution", "UniformContinuousDistribution", "WeibullDistribution",
 ]
 
-class pfunc(_Enum):
-    """Acceptable probability functions."""
-    
-    PDF: str = "pdf"
-    PROBABILITY_DENSITY_FUNCTION: str = "pdf"
-    DENSITY_FUNCTION: str = "pdf"
-    
-    PMF: str = "pmf"
-    PROBABILITY_MASS_FUNCTION: str = "pmf"
-    MASS_FUNCTION: str = "pmf"
-    
-    CDF: str = "cdf"
-    CUMULATIVE_DISTRIBUTION_FUNCTION: str = "cdf"
-    DISTRIBUTION_FUNCTION: str = "cdf"
-    
-    SF : str = "sf"
-    SURVIVAL_FUNCTION: str = "sf"
-    SURVIVOR_FUNCTION: str = "sf"
-    RELIABILITY_FUNCTION: str = "sf"
-    
-    PPF: str = "ppf"
-    PERCENT_POINT_FUNCTION: str = "ppf"
-    PERCENTILE_FUNCTION: str = "ppf"
-    QUANTILE_FUNCTION: str = "ppf"
-    INVERSE_CUMULATIVE_DISTRIBUTION_FUNCTION: str = "ppf"
-    INVERSE_DISTRIBUTION_FUNCTION: str = "ppf"
-    
-    ISF: str = "isf"
-    INVERSE_SURVIVAL_FUNCTION: str = "isf"
-    INVERSE_SURVIVOR_FUNCTION: str = "isf"
-    INVERSE_RELIABILITY_FUNCTION: str = "isf"
-
 T = _typing.TypeVar('T')
 NumericFunction = _typing.Callable[[float], float]
-ProbabilityFunction = _typing.Union[_Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"], pfunc]
+ProbabilityFunction = _typing.Union[_Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"], _Enum]
 
 DEFAULTS = {
     "infinity_approximation": 1e6,
@@ -125,6 +93,38 @@ def update_defaults(**kwargs: _typing.Any) -> None:
         DEFAULTS["global_seed"] = _np.random.RandomState(_np.random.MT19937(_np.random.SeedSequence(kwargs["global_seed"])))
     if "warnings" in kwargs:
         _warnings.filterwarnings(DEFAULTS["warnings"])
+        
+class PFUNC(_Enum):
+    """Acceptable probability functions."""
+    
+    PDF: str = "pdf"
+    PROBABILITY_DENSITY_FUNCTION: str = "pdf"
+    DENSITY_FUNCTION: str = "pdf"
+    
+    PMF: str = "pmf"
+    PROBABILITY_MASS_FUNCTION: str = "pmf"
+    MASS_FUNCTION: str = "pmf"
+    
+    CDF: str = "cdf"
+    CUMULATIVE_DISTRIBUTION_FUNCTION: str = "cdf"
+    DISTRIBUTION_FUNCTION: str = "cdf"
+    
+    SF : str = "sf"
+    SURVIVAL_FUNCTION: str = "sf"
+    SURVIVOR_FUNCTION: str = "sf"
+    RELIABILITY_FUNCTION: str = "sf"
+    
+    PPF: str = "ppf"
+    PERCENT_POINT_FUNCTION: str = "ppf"
+    PERCENTILE_FUNCTION: str = "ppf"
+    QUANTILE_FUNCTION: str = "ppf"
+    INVERSE_CUMULATIVE_DISTRIBUTION_FUNCTION: str = "ppf"
+    INVERSE_DISTRIBUTION_FUNCTION: str = "ppf"
+    
+    ISF: str = "isf"
+    INVERSE_SURVIVAL_FUNCTION: str = "isf"
+    INVERSE_SURVIVOR_FUNCTION: str = "isf"
+    INVERSE_RELIABILITY_FUNCTION: str = "isf"
 
 class ParameterValidationError(Exception):
     """Raised when an invalid set of parameters are used to instantiate a `Distribution`."""
@@ -228,7 +228,16 @@ class Distribution(_abc.ABC):
         """
         if isinstance(pfunc, _Enum):
             pfunc = pfunc.value
-        return getattr(self._dist, pfunc)(at)
+        try:
+            pfunc = getattr(self._dist, pfunc)
+        except AttributeError:
+            msg = "Invalid pfunc abbreviation. See PFUNC."
+            if pfunc == "pmf":
+                msg += " Did you mean pdf instead of pmf?"
+            elif pfunc == "pdf":
+                msg += " Did you mean pmf instead of pdf?"
+            raise ValueError(msg)
+        return pfunc(at)
     
     def expected_value(self, func: _typing.Optional[NumericFunction]=None) -> float:
         """
@@ -361,72 +370,6 @@ class Distribution(_abc.ABC):
             return self - other == 0
         else:
             raise TypeError(f"Cannot compare objects of types {type(self)} and {type(other)}.")
-    
-class formula(object):
-    """A formula-like variable that can be passed as a function. Can be used as a decorator on functions."""
-    
-    def __init__(self, func: _typing.Optional[NumericFunction]=None) -> None:
-        """Create a formula variable, optionally with a func. Defaults to the identity function."""
-        if func is None:
-            func = lambda x: x
-        self.func = func
-    
-    def __call__(self, other: T) -> T:
-        if isinstance(other, formula):
-            return formula(lambda x: self.func(other(x)))
-        elif isinstance(other, Distribution):
-            return other.apply_func(self.func)
-        else:
-            return self.func(other)
-    
-    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
-        if isinstance(other, formula):
-            return formula(lambda x: self.func(x) + other.func(x))
-        return formula(lambda x: self.func(x) + other)
-    
-    def __radd__(self, other: _typing.Union[float, _Self]) -> _Self:
-        return self + other
-    
-    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
-        if isinstance(other, formula):
-            return formula(lambda x: self.func(x) - other.func(x))
-        return formula(lambda x: self.func(x) - other)
-    
-    def __rsub__(self, other: _typing.Union[float, _Self]) -> _Self:
-        if isinstance(other, formula):
-            return formula(lambda x: other.func(x) - self.func(x))
-        return formula(lambda x: other - self.func(x))
-    
-    def __mul__(self, other: _typing.Union[float, _Self]) -> _Self:
-        if isinstance(other, formula):
-            return formula(lambda x: self.func(x) * other.func(x))
-        return formula(lambda x: self.func(x) * other)
-    
-    def __rmul__(self, other: _typing.Union[float, _Self]) -> _Self:
-        return self * other
-    
-    def __neg__(self) -> _Self:
-        return self * -1
-    
-    def __truediv__(self, other: _typing.Union[float, _Self]) -> _Self:
-        if isinstance(other, formula):
-            return formula(lambda x: self.func(x) / other.func(x))
-        return formula(lambda x: self.func(x) / other)
-    
-    def __rtruediv__(self, other: _typing.Union[float, _Self]) -> _Self:
-        if isinstance(other, formula):
-            return formula(lambda x: other.func(x) / self.func(x))
-        return formula(lambda x: other / self.func(x))
-    
-    def __pow__(self, other: _typing.Union[float, _Self]) -> _Self:
-        if isinstance(other, formula):
-            return formula(lambda x: self.func(x) ** other.func(x))
-        return formula(lambda x: self.func(x) ** other)
-    
-    def __rpow__(self, other: _typing.Union[float, _Self]) -> _Self:
-        if isinstance(other, formula):
-            return formula(lambda x: other.func(x) ** self.func(x))
-        return formula(lambda x: other ** self.func(x))
     
 class CustomDistribution(Distribution):
     """The base class for custom distributions, defined by a scipy rv. Do not instantiate this class."""
@@ -778,6 +721,72 @@ class Alias(object):
     def __call__(self, *parameters: float) -> Distribution:
         """Return a distribution interpreted by the alias."""
         return self._tdist(**{k: v for k, v in zip(self._characterization, parameters)})
+    
+class formula(object):
+    """A formula-like variable that can be passed as a function. Can be used as a decorator on functions."""
+    
+    def __init__(self, func: _typing.Optional[NumericFunction]=None) -> None:
+        """Create a formula variable, optionally with a func. Defaults to the identity function."""
+        if func is None:
+            func = lambda x: x
+        self.func = func
+    
+    def __call__(self, other: T) -> T:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(other(x)))
+        elif isinstance(other, Distribution):
+            return other.apply_func(self.func)
+        else:
+            return self.func(other)
+    
+    def __add__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(x) + other.func(x))
+        return formula(lambda x: self.func(x) + other)
+    
+    def __radd__(self, other: _typing.Union[float, _Self]) -> _Self:
+        return self + other
+    
+    def __sub__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(x) - other.func(x))
+        return formula(lambda x: self.func(x) - other)
+    
+    def __rsub__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: other.func(x) - self.func(x))
+        return formula(lambda x: other - self.func(x))
+    
+    def __mul__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(x) * other.func(x))
+        return formula(lambda x: self.func(x) * other)
+    
+    def __rmul__(self, other: _typing.Union[float, _Self]) -> _Self:
+        return self * other
+    
+    def __neg__(self) -> _Self:
+        return self * -1
+    
+    def __truediv__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(x) / other.func(x))
+        return formula(lambda x: self.func(x) / other)
+    
+    def __rtruediv__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: other.func(x) / self.func(x))
+        return formula(lambda x: other / self.func(x))
+    
+    def __pow__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: self.func(x) ** other.func(x))
+        return formula(lambda x: self.func(x) ** other)
+    
+    def __rpow__(self, other: _typing.Union[float, _Self]) -> _Self:
+        if isinstance(other, formula):
+            return formula(lambda x: other.func(x) ** self.func(x))
+        return formula(lambda x: other ** self.func(x))
     
 class Event(object):
     """An event described by a distribution and interval."""
