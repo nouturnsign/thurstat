@@ -5,7 +5,6 @@ import operator as _operator
 import typing as _typing
 import warnings as _warnings
 from enum import Enum as _Enum
-from types import BuiltinFunctionType as _BuiltinFunctionType
 from typing_extensions import Literal as _Literal, Self as _Self
 
 import matplotlib.pyplot as _plt
@@ -42,6 +41,7 @@ __all__ = [
 
 T = _typing.TypeVar('T')
 NumericFunction = _typing.Callable[[float], float]
+InfixOperator = _typing.Callable[[float, float], float]
 ProbabilityFunction = _typing.Union[_Literal["pdf", "pmf", "cdf", "sf", "ppf", "isf"], _Enum]
 
 DEFAULTS = {
@@ -280,7 +280,7 @@ class Distribution(_abc.ABC):
         pass
         
     @_abc.abstractmethod
-    def apply_infix_operator(self, other: _typing.Union[float, Distribution], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> Distribution:
+    def apply_infix_operator(self, other: _typing.Union[float, Distribution], op: InfixOperator, inv_op: InfixOperator) -> Distribution:
         pass
     
     def __add__(self, other: _typing.Union[float, Distribution]) -> Distribution:
@@ -480,7 +480,7 @@ class DiscreteDistribution(Distribution):
         if not add:
             _plt.show()
 
-    def apply_infix_operator(self, other: _typing.Union[float, DiscreteDistribution], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType=None) -> CustomDiscreteDistribution:
+    def apply_infix_operator(self, other: _typing.Union[float, DiscreteDistribution], op: InfixOperator, inv_op: InfixOperator=None) -> CustomDiscreteDistribution:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
@@ -635,7 +635,7 @@ class ContinuousDistribution(Distribution):
         """Approximate the continuous distribution with a discrete distribution using the correction for continuity."""
         return CustomDiscreteDistribution.from_pfunc("pmf", lambda x: self.probability_between(x - 0.5, x + 0.5), self.support.lower, self.support.upper)
     
-    def apply_infix_operator(self, other: _typing.Union[float, ContinuousDistribution], op: _BuiltinFunctionType, inv_op: _BuiltinFunctionType) -> CustomContinuousDistribution:
+    def apply_infix_operator(self, other: _typing.Union[float, ContinuousDistribution], op: InfixOperator, inv_op: InfixOperator) -> CustomContinuousDistribution:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
