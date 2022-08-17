@@ -1633,6 +1633,6 @@ class WeibullDistribution(ContinuousDistribution):
 del abc, operator, warnings
 del annotations, Enum, Literal, Self
 del Any, Dict, List, Optional, Type, Union
-del T, NumericFunction, ProbabilityFunction
+del T, NumericFunction, InfixOperator, ProbabilityFunction
 del plt, np, portion, scipy.stats
 del derivative, quad_vec, interp1d, brentq, minimize_scalar, rv_frozen
