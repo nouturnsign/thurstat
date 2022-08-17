@@ -243,10 +243,10 @@ For convenience, some defaults are assumed to be good values but can be changed 
 - exact: whether or not to use approximations in continuous random variable arithmetic, defaults to `False`
 - ratio: the ratio of points plotted to distance between endpoints when displaying, defaults to `200`
 - buffer: the additional percent of the width to be plotted to both the left and right of `display`, defaults to `0.2`
-- default_color: default matplotlib color to be used when plotting, defaults to `"C0"`
+- default_color: default [matplotlib color](https://matplotlib.org/stable/gallery/color/named_colors.html#list-of-named-colors) to be used when plotting, defaults to `"C0"`
 - local_seed: the numeric value of the seed when calling any function or None if no local seed, defaults to `None`
 - global_seed: the numeric value of the seed singleton to be set at the beginning or None if no global seed, defaults to `None`
-- warnings: the warning level to be displayed according to Python's `warning` module, defaults to `default`
+- warnings: the warning level to be displayed according to [Python's `warning` module](https://docs.python.org/3/library/warnings.html#the-warnings-filter), defaults to `"default"`
 
 As an example for the seeds, setting local seed will mean that calling `generate_random_values` on the same distribution will result in the same sequence of values. Setting global seed will mean that calling `generate_random_values` on the same distribution will start from the same sequence of values but keep progressing through the seed.
 
