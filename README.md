@@ -124,6 +124,7 @@ Use the constructor or classmethod `from_pfunc` with the custom type of desired 
 
 e.g.
 ```py
+import scipy.stats
 from numpy import pi
 
 # constructor
@@ -133,10 +134,7 @@ X = CustomContinuousDistribution(scipy.stats.cauchy())
 X = CustomContinuousDistribution.from_pfunc("pdf", lambda x: 1 / (pi * (1 + x ** 2)), a=0, b=1)
 
 # inheritance
-import scipy.stats
-
 class CauchyDistribution(ContinuousDistribution):
-    """A Cauchy distribution."""
     
     # optionally define options as a list of acceptable parameter names; used in ParameterValidationError
     options = [
