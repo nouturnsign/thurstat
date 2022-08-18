@@ -917,7 +917,8 @@ class BinomialDistribution(DiscreteDistribution):
             n = self.n - other.n
             if n == 1:
                 return BernoulliDistribution(p=self.p)
-            return BinomialDistribution(n=n, p=self.p)
+            elif n > 1:
+                return BinomialDistribution(n=n, p=self.p)
         return super().__sub__(other)
 
 class GeometricDistribution(DiscreteDistribution):
