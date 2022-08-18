@@ -447,8 +447,8 @@ class DiscreteDistribution(Distribution):
         
         x = _np.arange(a, b + 1)
         y = self.evaluate("pmf", x)
-        
         x_transform = func(x)
+        
         pmf = {}
         for e, p in zip(x_transform, y):
             pmf[e] = pmf.get(e, 0) + p
@@ -732,7 +732,7 @@ class Alias(object):
     
     def __call__(self, *parameters: float) -> Distribution:
         """Return a distribution interpreted by the alias."""
-        return self._tdist(**{k: v for k, v in zip(self._characterization, parameters)})
+        return self._tdist(**dict(zip(self._characterization, parameters)))
     
 class formula(object):
     """A formula-like variable that can be passed as a function. Can be used as a decorator on functions."""
