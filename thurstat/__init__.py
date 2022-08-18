@@ -258,7 +258,7 @@ class Distribution(_abc.ABC):
         Parameters
         ----------
         func: Optional[NumericFunction], default=None
-            A function that accepts a numeric input and returns a numeric output.
+            A function that accepts a numeric input and returns a numeric output. Defaults to the identity function.
         
         Returns
         -------
@@ -411,7 +411,7 @@ class DiscreteDistribution(Distribution):
         """Calculate the probability P(X == k)."""
         return self.evaluate("pmf", k)
     
-    def apply_func(self, func: NumericFunction, *, infinity_approximation: Optional[int]=None, a: Optional[int]=None, b: Optional[int]=None) -> CustomDiscreteDistribution:
+    def apply_func(self, func: NumericFunction, *inverse_funcs, infinity_approximation: Optional[int]=None, a: Optional[int]=None, b: Optional[int]=None) -> CustomDiscreteDistribution:
         """
         Apply a function to the distribution to create a new distribution.
         
@@ -429,6 +429,8 @@ class DiscreteDistribution(Distribution):
         CustomDiscreteDistriibution
             The new distribution.
         """
+        if len(inverse_funcs) > 0:
+            _warnings.warn(f"Passed {len(inverse_funcs)} inverse functions to apply_func on a DiscreteDistribution. These will be ignored.")
         a0, b0 = self.support.lower, self.support.upper
         
         if (infinity_approximation is None) and (a is None) and (b is None):
