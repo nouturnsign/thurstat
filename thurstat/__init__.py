@@ -168,7 +168,7 @@ class Distribution(_abc.ABC):
         pass
     
     @property
-    def support(self) -> _portion.interval.Interval.Interval:
+    def support(self) -> _portion.interval.Interval:
         if not hasattr(self, "_support"):
             self._support = _portion.closed(*self._dist.support())
         return self._support
