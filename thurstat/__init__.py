@@ -90,6 +90,7 @@ def update_defaults(**kwargs: Any) -> None:
         The numeric value of the seed singleton to be set at the beginning or None if no global seed, defaults to `None`
     warnings: str
         The warning level to be displayed according to Python's `warning` module, defaults to `default`
+        
     Returns
     -------
     None
@@ -284,7 +285,7 @@ class Distribution(_abc.ABC):
         pass
         
     @_abc.abstractmethod
-    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction) -> CustomDistribution:
+    def apply_func(self, func: NumericFunction, *inverse_funcs: NumericFunction, infinity_approximation: Optional[float]=None, a: Optional[float]=None, b: Optional[float]=None) -> CustomDistribution:
         pass
         
     @_abc.abstractmethod
@@ -426,8 +427,12 @@ class DiscreteDistribution(Distribution):
         
         Returns
         -------
-        CustomDiscreteDistriibution
+        CustomDiscreteDistribution
             The new distribution.
+            
+        Notes
+        -----
+        Passing additional arguments into func will raise a warning. Inverse functions are not considered in this implementation.
         """
         if len(inverse_funcs) > 0:
             _warnings.warn(f"Passed {len(inverse_funcs)} inverse functions to apply_func on a DiscreteDistribution. These will be ignored.")
@@ -625,7 +630,7 @@ class ContinuousDistribution(Distribution):
         color: Optional[str], default=None
             What color to use. Defaults to matplotlib's default blue color.
         **kwargs
-            Additional keyword arguments to pass to `plt.stem`.
+            Additional keyword arguments to pass to `plt.plot`.
         
         Returns
         -------
