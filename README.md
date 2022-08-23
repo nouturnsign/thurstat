@@ -47,20 +47,23 @@ To get probability functions, use the enum `PFUNC` e.g. `PFUNC.PDF`. Alternative
 ### Predefined discrete distributions
 
 ```py
-["BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", "BinomialDistribution", 
- "GeometricDistribution", "HypergeometricDistribution", "NegativeBinomialDistribution", 
- "NegativeHypergeometricDistribution", "PoissonDistribution", "SkellamDistribution", 
- "UniformDiscreteDistribution", "YuleSimonDistribution", "ZipfDistribution", "ZipfianDistribution"]
+["BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", 
+ "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", 
+ "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", 
+ "PoissonDistribution", "SkellamDistribution", "UniformDiscreteDistribution", 
+ "YuleSimonDistribution", "ZipfDistribution", "ZipfianDistribution"]
 ```
 
 ### Predefined continuous distributions
 
 ```py
-["BetaDistribution", "BetaPrimeDistribution", "CauchyDistribution", "ChiDistribution", 
- "ChiSquaredDistribution", "CosineDistribution", "ErlangDistribution", "ExponentialDistribution", 
- "FDistribution", "GammaDistribution", "GompertzDistribution", "LaplaceDistribution", 
- "LogisticDistribution", "NormalDistribution", "TDistribution", "TrapezoidalDistribution",
- "TriangularDistribution", "UniformContinuousDistribution", "WeibullDistribution"]
+["BetaDistribution", "BetaPrimeDistribution", "CauchyDistribution", 
+ "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution", 
+ "ErlangDistribution", "ExponentialDistribution", "FDistribution", 
+ "GammaDistribution", "GompertzDistribution", "LaplaceDistribution", 
+ "LogisticDistribution", "NormalDistribution", "TDistribution", 
+ "TrapezoidalDistribution", "TriangularDistribution", 
+ "UniformContinuousDistribution", "WeibullDistribution"]
 ```
 
 ### Creating distribution objects
@@ -101,7 +104,7 @@ discretize() # ContinuousDistribution only
 
 ### Useful classmethods
 
-Use `to_alias` with any distribution class, and use `from_pfunc` on `Custom...Distribution`. Note that inputting a `"pdf"` will mean that scipy has to integrate the `"pdf"` to calculate the `"cdf"`. If inputting the `"pdf"` is too slow, try integrating by hand or with other software first, then using `from_pfunc` on the `"cdf"`. See below for more on aliases.
+Use `to_alias` with any distribution class, and use `from_pfunc` on `Custom...Distribution`. Note that inputting a `"pdf"` for a `CustomContinuousDistribution` will mean that scipy has to integrate the `"pdf"` to calculate the `"cdf"`. If inputting the `"pdf"` is too slow, try integrating by hand or with other software first, then using `from_pfunc` on the `"cdf"`. See below for more on aliases.
 
 ```
 to_alias(*interpret_parameters)
@@ -205,7 +208,7 @@ Z = 2 * (X - Y)
 
 ### Alias
 
-Instead of forcibly naming arguments every time you wish to instantiate a class, you may also create an alias using positional arguments as the characterization.
+Instead of forcibly naming arguments every time you wish to instantiate a class, you may also create an alias using positional arguments as the characterization. Creating an `Alias` does not check for the validity of the characterization, so it is possible to create an invalid Alias without error.
 
 e.g.
 ```py
@@ -239,16 +242,18 @@ print(P(0.2 < X < 0.4))
 
 For convenience, some defaults are assumed to be good values but can be changed using `update_defaults`. Namely, the following defaults can be changed:
 
-- infinity_approximation: large enough to be considered a finite infinity, defaults to `1e6`
+- infinity_approximation: large enough to be considered infinity, defaults to `1e6`
 - exact: whether or not to use approximations in continuous random variable arithmetic, defaults to `False`
 - ratio: the ratio of points plotted to distance between endpoints when displaying, defaults to `200`
 - buffer: the additional percent of the width to be plotted to both the left and right of `display`, defaults to `0.2`
-- default_color: default [matplotlib color](https://matplotlib.org/stable/gallery/color/named_colors.html#list-of-named-colors) to be used when plotting, defaults to `"C0"`
+- default_color: default [`matplotlib` color](https://matplotlib.org/stable/gallery/color/named_colors.html#list-of-named-colors) to be used when plotting, defaults to `"C0"`
 - local_seed: the numeric value of the seed when calling any function or None if no local seed, defaults to `None`
 - global_seed: the numeric value of the seed singleton to be set at the beginning or None if no global seed, defaults to `None`
 - warnings: the warning level to be displayed according to [Python's `warning` module](https://docs.python.org/3/library/warnings.html#the-warnings-filter), defaults to `"default"`
 
-As an example for the seeds, setting local seed will mean that calling `generate_random_values` on the same distribution will result in the same sequence of values. Setting global seed will mean that calling `generate_random_values` on the same distribution will start from the same sequence of values but keep progressing through the seed.
+Setting exact to `True` will make random variable arithmetic prohibitively slow on general continuous distributions.
+
+Setting local seed will mean that calling `generate_random_values` on the same distribution will result in the same sequence of values. Setting global seed will mean that calling `generate_random_values` on the same distribution will start from the same sequence of values but keep progressing through the seed.
 
 e.g.
 ```py
