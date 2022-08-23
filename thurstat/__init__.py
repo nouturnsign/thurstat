@@ -32,7 +32,7 @@ from ._utils import PFUNC, update_defaults
 
 __all__ = [
     # global
-    "PFUNC", "update_defaults", "formula",
+    "PFUNC", "update_defaults", 
     # base classes
     "DiscreteDistribution", "ContinuousDistribution",
     # custom equivalents of the base classes
@@ -40,5 +40,5 @@ __all__ = [
     # events and probability
     "Event", "probability_of", "P",
     # miscellaneous
-    "Alias",
+    "Alias", "formula",
 ] + continuous_tdist + discrete_tdist
