@@ -61,28 +61,28 @@ class Distribution(abc.ABC):
     @property
     def mean(self) -> float:
         if not hasattr(self, "_mean"):
-            self._mean, self._variance, self._skewness, self._excess_kurtosis = self._dist.stats(moments="mvsk")
+            self._mean, self._variance, self._skewness, self._excess_kurtosis = map(float, self._dist.stats(moments="mvsk"))
             self._standard_deviation = self._variance ** 0.5
         return self._mean
     
     @property
     def variance(self) -> float:
         if not hasattr(self, "_variance"):
-            self._mean, self._variance, self._skewness, self._excess_kurtosis = self._dist.stats(moments="mvsk")
+            self._mean, self._variance, self._skewness, self._excess_kurtosis = map(float, self._dist.stats(moments="mvsk"))
             self._standard_deviation = self._variance ** 0.5
         return self._variance
     
     @property
     def skewness(self) -> float:
         if not hasattr(self, "_skewness"):
-            self._mean, self._variance, self._skewness, self._excess_kurtosis = self._dist.stats(moments="mvsk")
+            self._mean, self._variance, self._skewness, self._excess_kurtosis = map(float, self._dist.stats(moments="mvsk"))
             self._standard_deviation = self._variance ** 0.5
         return self._skewness
     
     @property
     def excess_kurtosis(self) -> float:
         if not hasattr(self, "_excess_kurtosis"):
-            self._mean, self._variance, self._skewness, self._excess_kurtosis = self._dist.stats(moments="mvsk")
+            self._mean, self._variance, self._skewness, self._excess_kurtosis = map(float, self._dist.stats(moments="mvsk"))
             self._standard_deviation = self._variance ** 0.5
         return self._excess_kurtosis
     
@@ -377,7 +377,7 @@ class DiscreteDistribution(Distribution):
         if not add:
             plt.show()
 
-    def apply_infix_operator(self, other: Union[float, DiscreteDistribution], op: InfixOperator, inv_op: InfixOperator=None) -> CustomDiscreteDistribution:
+    def apply_infix_operator(self, other: Union[float, DiscreteDistribution], op: InfixOperator, inv_op: Optional[InfixOperator]=None) -> CustomDiscreteDistribution:
         """Apply a binary infix operator. Avoid calling this function and use built-in operators instead."""
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
@@ -537,7 +537,7 @@ class ContinuousDistribution(Distribution):
         if isinstance(other, (int, float)):
             a, b = self.support.lower, self.support.upper
             a2, b2 = sorted((op(a, other), op(b, other)))
-            return CustomContinuousDistribution.from_pfunc("pmf", lambda x: self.evaluate("pmf", inv_op(x, other)), a2, b2)
+            return CustomContinuousDistribution.from_pfunc("pdf", lambda x: self.evaluate("pdf", inv_op(x, other)), a2, b2)
         elif isinstance(other, ContinuousDistribution):
             a0, b0 = self.support.lower, self.support.upper
             if a0 == -np.inf:
