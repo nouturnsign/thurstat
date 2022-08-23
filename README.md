@@ -47,23 +47,27 @@ To get probability functions, use the enum `PFUNC` e.g. `PFUNC.PDF`. Alternative
 ### Predefined discrete distributions
 
 ```py
-["BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", 
- "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", 
- "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", 
- "PoissonDistribution", "SkellamDistribution", "UniformDiscreteDistribution", 
- "YuleSimonDistribution", "ZipfDistribution", "ZipfianDistribution"]
+discrete_tdist = [
+    "BinomialDistribution", "BernoulliDistribution", "BetaBinomialDistribution", 
+    "BinomialDistribution", "GeometricDistribution", "HypergeometricDistribution", 
+    "NegativeBinomialDistribution", "NegativeHypergeometricDistribution", 
+    "PoissonDistribution", "SkellamDistribution", "UniformDiscreteDistribution", 
+    "YuleSimonDistribution", "ZipfDistribution", "ZipfianDistribution"
+]
 ```
 
 ### Predefined continuous distributions
 
 ```py
-["BetaDistribution", "BetaPrimeDistribution", "CauchyDistribution", 
- "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution", 
- "ErlangDistribution", "ExponentialDistribution", "FDistribution", 
- "GammaDistribution", "GompertzDistribution", "LaplaceDistribution", 
- "LogisticDistribution", "NormalDistribution", "TDistribution", 
- "TrapezoidalDistribution", "TriangularDistribution", 
- "UniformContinuousDistribution", "WeibullDistribution"]
+continuous_tdist = [
+    "BetaDistribution", "BetaPrimeDistribution", "CauchyDistribution", 
+    "ChiDistribution", "ChiSquaredDistribution", "CosineDistribution", 
+    "ErlangDistribution", "ExponentialDistribution", "FDistribution", 
+    "GammaDistribution", "GompertzDistribution", "LaplaceDistribution", 
+    "LogisticDistribution", "NormalDistribution", "TDistribution", 
+    "TrapezoidalDistribution", "TriangularDistribution", 
+    "UniformContinuousDistribution", "WeibullDistribution"
+]
 ```
 
 ### Creating distribution objects
