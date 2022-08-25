@@ -86,13 +86,13 @@ median
 mean
 variance
 skewness
-kurtosis
+excess_kurtosis
 standard_deviation
 ```
 
 ### Useful methods
 
-See docstrings for additional arguments. The methods given below are for all distributions except `discretize`.
+See docstrings for additional arguments. The methods given below are for all distributions except `discretize`. Note that calling `probability_at` on a `ContinuousDistribution` will raise a warning and always return `0`.
 
 ```
 generate_random_values(n)
@@ -108,7 +108,7 @@ discretize() # ContinuousDistribution only
 
 ### Useful classmethods
 
-Use `to_alias` with any distribution class, and use `from_pfunc` on `Custom...Distribution`. Note that inputting a `"pdf"` for a `CustomContinuousDistribution` will mean that scipy has to integrate the `"pdf"` to calculate the `"cdf"`. If inputting the `"pdf"` is too slow, try integrating by hand or with other software first, then using `from_pfunc` on the `"cdf"`. See below for more on aliases.
+Use `to_alias` with any distribution class, and use `from_pfunc` on `Custom...Distribution`. Note that inputting a `"pdf"` for a `CustomContinuousDistribution` will mean that scipy has to integrate the `"pdf"` to calculate the `"cdf"`. If using the `"pdf"` is too slow, try integrating by hand or with other software first, then using `from_pfunc` on the `"cdf"`. See below for more on aliases.
 
 ```
 to_alias(*interpret_parameters)
@@ -177,6 +177,8 @@ Z = UniformContinuousDistribution(a=0, b=1).apply_func(abs, lambda x: x, lambda 
 
 Write formulas without lambda expressions with formula-like notation. Formulas can be called on numeric inputs, distributions, and on each other. Note that formulas are immutable, so modifying formulas creates new `formula` objects instead of modifying the original object. 
 
+When calling a formula, the first call will be done assuming the function is already vectorized. If the function runs into a `TypeError`, the formula will be called again as a vectorized function.
+
 e.g.
 ```py
 # using formula constructor, only needed once
@@ -212,7 +214,7 @@ Z = 2 * (X - Y)
 
 ### Alias
 
-Instead of forcibly naming arguments every time you wish to instantiate a class, you may also create an alias using positional arguments as the characterization. Creating an `Alias` does not check for the validity of the characterization, so it is possible to create an invalid Alias without error.
+Instead of forcibly naming arguments every time you wish to instantiate a class, you may also create an alias using positional arguments as the characterization. Creating an `Alias` does not check for the validity of the characterization, so it is possible to create an invalid `Alias` without error.
 
 e.g.
 ```py
@@ -274,6 +276,7 @@ update_defaults(warnings="ignore", infinity_approximation=1e3)
 - implement event arithmetic (intersection, union)
 - implement model fitting
 - add more distributions
+- add sympy support
 - add tests
 
 ## License
