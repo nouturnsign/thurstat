@@ -676,7 +676,10 @@ class formula(object):
         elif isinstance(other, Distribution):
             return other.apply_func(self.func)
         else:
-            return self.func(other)
+            try:
+                return self.func(other)
+            except TypeError:
+                return np.vectorize(self.func)(other)
     
     def __add__(self, other: Union[float, Self]) -> Self:
         if isinstance(other, formula):
