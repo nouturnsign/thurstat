@@ -6,6 +6,7 @@ try:
 except ImportError:
     from typing_extensions import Literal
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 NumericFunction = Callable[[float], float]
@@ -22,6 +23,10 @@ DEFAULTS = {
     "global_seed": None,
     "warnings": "default",
 }
+
+def display_added() -> None:
+    """Display graphs that have been added to the same figure. Aliases `plt.show()`."""
+    plt.show()
 
 def update_defaults(**kwargs: Any) -> None:
     """

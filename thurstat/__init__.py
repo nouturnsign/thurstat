@@ -28,7 +28,7 @@ from ._tdist_continuous import __all__ as continuous_tdist
 from ._tdist_continuous import *
 from ._tdist_discrete import __all__ as discrete_tdist
 from ._tdist_discrete import *
-from ._utils import PFUNC, update_defaults
+from ._utils import PFUNC, update_defaults, display_added
 
 __all__ = [
     # global
@@ -40,5 +40,5 @@ __all__ = [
     # events and probability
     "Event", "probability_of", "P",
     # miscellaneous
-    "Alias", "formula",
+    "Alias", "formula", "display_added",
 ] + continuous_tdist + discrete_tdist
